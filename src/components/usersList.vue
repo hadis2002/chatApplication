@@ -1,5 +1,5 @@
 <template>
-    <div v-for="user in usersList" class="text-white px-10 p-3 flex items-center gap-4 hover:bg-blue-950 focus:bg-blue-950">
+    <div @click="go_user_chat_page(user)" v-for="user in usersList" class="text-white px-10 p-3 flex items-center gap-4 hover:bg-blue-950 focus:bg-blue-950">
         <div class="w-16 h-12 relative">
             <div class="w-3 h-3 absolute bottom-0 right-0 rounded-full border-2 border-white" :class="user.status === 'offline' ? 'bg-gray-500' : 'bg-green-500'"></div>
             <img :src="user.avatar ? user.avatar : defaultProfile" class="w-full h-full rounded-full" alt="">
@@ -15,8 +15,10 @@
 
 <script lang="ts" setup>
 import { ref , onMounted , defineProps } from 'vue';
+import { useRouter } from 'vue-router';
 import axiosConfig from '../../src/axiosConfig'
 import defaultProfile from '../../public/images/default-avatar.avif'
+const router = useRouter()
 let usersList = ref([])
 const props = defineProps({
     users: {
@@ -33,6 +35,9 @@ const fetch_users = () => {
     .catch((error) => {
         console.log(error, 'error');
     });
+}
+const go_user_chat_page = (user) => {
+    router.push({ name: 'chat', params: { userId: user.uid } });
 }
 onMounted(() => {
   fetch_users()

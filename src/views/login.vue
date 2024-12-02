@@ -42,7 +42,6 @@ const submit_form = () => {
     CometChat.getLoggedinUser().then(
     (user) => {
         console.log(user);
-        
         if (!user) {
         CometChat.login(UID.value, authKey.value).then( 
             (user) => {

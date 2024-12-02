@@ -1,5 +1,5 @@
 <template>
-    <div v-for="group in groupsList" class="text-white px-10 p-3 flex items-center gap-4 hover:bg-blue-950">
+    <div v-for="group in groupsList" class="text-white p-3 flex items-center gap-4 hover:bg-blue-950">
         <div class="w-16 h-12 relative">
             <img :src="group.icon ? group.icon : defaultProfile" class="w-full h-full rounded-full" alt="">
         </div>

@@ -1,5 +1,5 @@
 <template>
-    <div v-for="group in groupsList" class="text-white p-3 flex items-center gap-4 hover:bg-blue-950">
+    <div class="text-white p-3 flex items-center gap-4 hover:bg-blue-950">
         <div class="w-16 h-12 relative">
             <img :src="group.icon ? group.icon : defaultProfile" class="w-full h-full rounded-full" alt="">
         </div>
@@ -13,27 +13,12 @@
 </template>
 
 <script lang="ts" setup>
-import { ref , onMounted, defineProps } from 'vue';
-import axiosConfig from '../../src/axiosConfig'
+import { defineProps } from 'vue';
 import defaultProfile from '../../public/images/default-avatar.avif'
-let groupsList = ref([])
 const props = defineProps({
-    groups: {
-        type: Array,
-        default: []
+    group: {
+        type: Object,
+        default: {}
     }
-})
-const fetch_groups = () => {
-    axiosConfig.get('groups')
-    .then((res) => {
-        groupsList.value = res.data.data
-        props.groups.push(groupsList.value)
-    })
-    .catch((error) => {
-        console.log(error, 'error');
-    });
-}
-onMounted(() => {
-  fetch_groups()
 })
 </script>

@@ -5,7 +5,7 @@
         class="relative w-[60%] bg-white py-2.5 px-4 rounded-full flex justify-center items-center"
       >
         <input
-          v-model="searchQuery"
+          @keyup="searchQuery = $event.target.value"
           type="text"
           class="search-box text-right me-7 w-full text-sm outline-none"
           placeholder="جستجو"
@@ -99,25 +99,54 @@
     <div class="h-[85%] flex flex-col items-center">
       <TabGroup>
         <TabList class="flex justify-around h-[12%] w-[90%]">
-          <Tab class="!bg-transparent text-white outline-none">
+          <Tab
+            @click="currentTab = 'all'"
+            class="!bg-transparent text-white outline-none"
+          >
             همه گفت و گو ها
           </Tab>
-          <Tab class="!bg-transparent text-white outline-none"> مخاطبین </Tab>
-          <Tab class="!bg-transparent text-white outline-none"> گروه ها </Tab>
+          <Tab
+            @click="currentTab = 'users'"
+            class="!bg-transparent text-white outline-none"
+          >
+            مخاطبین
+          </Tab>
+          <Tab
+            @click="currentTab = 'groups'"
+            class="!bg-transparent text-white outline-none"
+          >
+            گروه ها
+          </Tab>
         </TabList>
 
         <TabPanels class="h-[88%] w-full">
-          <TabPanel v-for="item in filteredResults" :key="item.id" class="h-full overflow-auto px-5">
-            <usersList :users="users"></usersList>
-            <groupsList :groups="groups"></groupsList>
+          <TabPanel class="h-full overflow-auto px-5">
+            <usersList
+              v-for="user in filteredResults"
+              :key="user"
+              :user="user"
+            ></usersList>
+            <groupsList
+              v-for="group in filteredResults"
+              :key="group"
+              :group="group"
+            ></groupsList>
           </TabPanel>
 
           <TabPanel class="h-full overflow-auto px-5">
-            <usersList></usersList>
+            <usersList
+              v-for="user in filteredResults"
+              :key="user"
+              :user="user"
+            ></usersList>
           </TabPanel>
 
           <TabPanel class="h-full overflow-auto px-5">
-            <groupsList></groupsList>
+            <groupsList
+              v-for="group in filteredResults"
+              :key="group"
+              :group="group"
+            ></groupsList>
           </TabPanel>
         </TabPanels>
       </TabGroup>
@@ -127,6 +156,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
+import axiosConfig from "../../src/axiosConfig";
 import { TabGroup, TabList, Tab, TabPanels, TabPanel } from "@headlessui/vue";
 import usersList from "../components/usersList.vue";
 import groupsList from "../components/groupsList.vue";
@@ -136,25 +166,57 @@ import { useAuthStore } from "../stores/authStore";
 const router = useRouter();
 const authStore = useAuthStore();
 const sidebar = ref(false);
-const searchQuery = ref('')
 const users = ref([]);
 const groups = ref([]);
+const searchQuery = ref("");
+const currentTab = ref("all");
 const toggle_sidebar = () => {
   sidebar.value = true;
 };
 const close_sidebar = () => {
   sidebar.value = false;
 };
+const fetch_users = () => {
+  axiosConfig
+    .get("users?perPage=100&page=1")
+    .then((res) => {
+      users.value = res.data.data;
+    })
+    .catch((error) => {
+      console.log(error, "error");
+    });
+};
+const fetch_groups = () => {
+  axiosConfig
+    .get("groups")
+    .then((res) => {
+      groups.value = res.data.data;
+    })
+    .catch((error) => {
+      console.log(error, "error");
+    });
+};
+let combinedData = [];
 const filteredResults = computed(() => {
-  const query = searchQuery.value.toLowerCase();
-  console.log(users.value);
-  
-  const combinedData = [...users.value, ...groups.value];
-  console.log(combinedData);
-  
-  return combinedData.filter(item => 
-    item.name.toLowerCase().includes(query)
-  );
+  if (currentTab.value == "users") {
+    if(currentTab.value == 'all'){
+      if (searchQuery.value == "") {
+      return combinedData = [...users.value, ...groups.value]
+    }
+    }
+    if (currentTab.value == "users") {
+      let finded = users.value.filter((item) => {
+        return item.name.includes(searchQuery.value);
+      });
+      return finded;
+    }
+    if (currentTab.value == "groups") {
+      let finded = groups.value.filter((item) => {
+        return item.name.includes(searchQuery.value);
+      });
+      return finded;
+    }
+  }
 });
 const logout = () => {
   CometChat.logout().then(
@@ -172,11 +234,10 @@ const logout = () => {
 const go_profile_page = () => {
   router.push({ name: "profile" });
 };
-
 onMounted(() => {
-    console.log(users.value , 'ooooooo');
-    
-})
+  fetch_groups();
+  fetch_users();
+});
 </script>
 
 <style>

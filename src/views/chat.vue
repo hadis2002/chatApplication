@@ -30,36 +30,57 @@
                 </div>
             </div>
         </div>
-        <div class="h-[80%] overflow-auto">
-            <div v-for="message in messages" :key="message.id">
-                <div
-                    class="flex items-start gap-2 p-3"
-                    :class="{'justify-end': message.senderId === currentUserId, 'justify-start': message.senderId !== currentUserId}"
-                >
-                    <img v-if="message.senderId !== currentUserId" src="../../public/images/default-avatar.avif" class="w-10 h-10 rounded-full">
-                    <div
-                        class="p-3 rounded-lg max-w-xs"
-                        :class="{
-                            'bg-blue-500 text-white': message.senderId === currentUserId,
-                            'bg-gray-200': message.senderId !== currentUserId
-                        }"
+        <div ref="chatContainer" class="h-[80%] overflow-auto">
+            <div v-if="validMessages.length === 0" class="h-full flex flex-col gap-3 justify-center items-center">
+                <img class="w-[50%]" src="../../public/images/empty-chat.png" alt="">
+                <p class="text-white text-lg opacity-60">گفت و گو را آغاز کنید.</p>
+            </div>
+            <div v-else v-for="message in validMessages" :key="message.id">
+                <div class="flex"
+                    :class="{
+                        'justify-start': (message.sender?.uid || message.sender) == authStore.loginInfo.uid,
+                        'justify-end': (message.sender?.uid || message.sender) != authStore.loginInfo.uid
+                    }"
                     >
-                        <!-- <p>{{ message.content }}</p> -->
-                        سلام خوبی
+                    <div
+                        class="flex items-start gap-2 p-3 w-fit"
+                        :class="{
+                            'flex-row': (message.sender?.uid || message.sender) == authStore.loginInfo.uid,
+                            'flex-row-reverse': (message.sender?.uid || message.sender) != authStore.loginInfo.uid
+                        }"
+                        >
+                        <!-- <img v-if="message.senderId !== currentUserId" src="../../public/images/default-avatar.avif" class="w-10 h-10 rounded-full"> -->
+                        <img :src="authStore.loginInfo.avatar ? authStore.loginInfo.avatar : defaultProfile" class="w-10 h-10 rounded-full">
+                        <div
+                            class="p-3 rounded-lg max-w-xs"
+                            :class="{
+                                'bg-blue-500 text-white': (message.sender?.uid || message.sender) == authStore.loginInfo.uid,
+                                'bg-purple-500 text-white': (message.sender?.uid || message.sender) != authStore.loginInfo.uid
+                            }"
+                        >
+                            <p>{{ message.data.text }}</p>
+                        </div>
                     </div>
-                    <img v-if="message.senderId === currentUserId" src="../../public/images/default-avatar.avif" class="w-10 h-10 rounded-full">
                 </div>
             </div>
         </div>
         <div class="bg-[#21242b] flex items-center justify-between px-5 h-[10%]">
             <div class="flex items-center gap-2">
-                <div>
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="gray" width="24" height="24">
-                        <path d="M17.5 6.5L11 13c-1.17 1.17-1.17 3.07 0 4.24 1.17 1.17 3.07 1.17 4.24 0l6.5-6.5c1.76-1.76 1.76-4.62 0-6.38-1.76-1.76-4.62-1.76-6.38 0L6.34 10.62c-2.34 2.34-2.34 6.14 0 8.48 2.34 2.34 6.14 2.34 8.48 0l5.31-5.31a1 1 0 0 0-1.42-1.42l-5.31 5.31c-1.56 1.56-4.1 1.56-5.66 0s-1.56-4.1 0-5.66l6.12-6.12c1.17-1.17 3.07-1.17 4.24 0 1.17 1.17 1.17 3.07 0 4.24l-6.5 6.5a1 1 0 1 0 1.42 1.42l6.5-6.5c1.56-1.56 1.56-4.1 0-5.66-1.56-1.56-4.1-1.56-5.66 0L7.76 12.76a1 1 0 1 0 1.42 1.42l5.31-5.31c1.17-1.17 3.07-1.17 4.24 0 .93.93.93 2.44 0 3.37l-6.5 6.5c-.63.63-1.67.63-2.3 0s-.63-1.67 0-2.3l6.5-6.5a1 1 0 0 0-1.42-1.42z"/>
+                <div @click="send_message">
+                    <svg class="w-5 h-5" fill="gray" height="800px" width="800px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+                        viewBox="0 0 495.003 495.003" xml:space="preserve">
+                        <g id="XMLID_51_">
+                            <path id="XMLID_53_" d="M164.711,456.687c0,2.966,1.647,5.686,4.266,7.072c2.617,1.385,5.799,1.207,8.245-0.468l55.09-37.616
+                                l-67.6-32.22V456.687z"/>
+                            <path id="XMLID_52_" d="M492.431,32.443c-1.513-1.395-3.466-2.125-5.44-2.125c-1.19,0-2.377,0.264-3.5,0.816L7.905,264.422
+                                c-4.861,2.389-7.937,7.353-7.904,12.783c0.033,5.423,3.161,10.353,8.057,12.689l125.342,59.724l250.62-205.99L164.455,364.414
+                                l156.145,74.4c1.918,0.919,4.012,1.376,6.084,1.376c1.768,0,3.519-0.322,5.186-0.977c3.637-1.438,6.527-4.318,7.97-7.956
+                                L494.436,41.257C495.66,38.188,494.862,34.679,492.431,32.443z"/>
+                        </g>
                     </svg>
                 </div>
                 <div>
-                    <input type="text" class="bg-transparent placeholder:text-gray-400" placeholder="پیام خود را بنویسید.">
+                    <input @keydown.enter="send_message" v-model.trim="messageForm.data.text" type="text" class="bg-transparent placeholder:text-gray-400 outline-none text-white" placeholder="پیام خود را بنویسید.">
                 </div>
             </div>
             <div>
@@ -74,35 +95,101 @@
 
 <script setup lang="ts">
 import axiosConfig from '../../src/axiosConfig'
+import { CometChat } from '@cometchat-pro/chat';
+import { useAuthStore } from '../stores/authStore';
 import defaultProfile from '../../public/images/default-avatar.avif'
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
 const route = useRoute()
+const authStore = useAuthStore()
+let chatContainer = ref(null)
 let messages = ref([])
 const userData = ref([])
+const messageForm = ref({
+    receiverId: route.params.userId,
+    receiverType: 'user',
+    data : {
+        text: ''
+    }, 
+})
 const fetch_user_data = () => {
     axiosConfig.get(`users/${route.params.userId}`)
     .then((res) => {
         userData.value = res.data.data
-        console.log(res);
+        console.log(userData , 'user data');
     })
     .catch((error) => {
         console.log(error);
     })
 }
+
+const validMessages = computed(() => {
+    return messages.value.filter(message => message.data && message.data.text);
+});
+
 const fetch_user_messages = () => {
     axiosConfig.get(`users/${route.params.userId}/messages?myMentionsOnly=false&hasReactions=false&mentionsWithBlockedInfo=false&mentionswithTagInfo=false&perPage=100`)
     .then((res) => {
-        messages.value = res.data.content
-        console.log(res);
+        messages.value = res.data.data
+        console.log(messages.value , 'user messages');
     })
     .catch((error) => {
         console.log(error);
     });
 }
+const send_message = () => {
+    console.log('Sender:', typeof messageForm.value.senderId);
+    const message = new CometChat.TextMessage(
+        messageForm.value.receiverId,
+        messageForm.value.data.text,
+        messageForm.value.receiverType,
+    );
+    CometChat.sendMessage(message).then(
+        (message) => {
+            messages.value.push(message)
+            scrollToBottom()
+            messageForm.value.data.text = ''
+        },
+        (error) => {
+            console.error("Message sending failed", error);
+        }
+    );
+};
+
+const setup_message_listener = () => {
+    CometChat.addMessageListener(
+        "message_listener",
+        new CometChat.MessageListener({
+            onTextMessageReceived: (message) => {
+                console.log("New message received:", message);
+                messages.value.push(message);
+            }
+        })
+    );
+};
+
+const scrollToBottom = () => {
+      if (chatContainer.value) {
+        chatContainer.value.scrollTo({
+          top: chatContainer.value.scrollHeight,
+          behavior: "smooth",
+        });
+      }
+};
+
+// فراخوانی Listener هنگام لاگین
+
 
 onMounted(() => {
     fetch_user_data()
     fetch_user_messages()
+    setup_message_listener()
+    scrollToBottom()
 })
 </script>
+
+<style>
+html {
+    scroll-behavior: smooth;
+}
+</style>

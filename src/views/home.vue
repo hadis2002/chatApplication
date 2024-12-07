@@ -121,16 +121,10 @@
 
         <TabPanels class="h-[88%] w-full">
           <TabPanel class="h-full overflow-auto px-5">
-            <usersList
-              v-for="user in filteredResults"
-              :key="user"
-              :user="user"
-            ></usersList>
-            <groupsList
-              v-for="group in filteredResults"
-              :key="group"
-              :group="group"
-            ></groupsList>
+            <div v-for="item in filteredResults" :key="item.id">
+              <usersList v-if="item.type === 'user'" :user="item" />
+              <groupsList v-if="item.type === 'group'" :group="item" />
+            </div>
           </TabPanel>
 
           <TabPanel class="h-full overflow-auto px-5">
@@ -196,28 +190,22 @@ const fetch_groups = () => {
       console.log(error, "error");
     });
 };
-let combinedData = [];
 const filteredResults = computed(() => {
-  if (currentTab.value == "users") {
-    if(currentTab.value == 'all'){
-      if (searchQuery.value == "") {
-      return combinedData = [...users.value, ...groups.value]
-    }
-    }
-    if (currentTab.value == "users") {
-      let finded = users.value.filter((item) => {
-        return item.name.includes(searchQuery.value);
-      });
-      return finded;
-    }
-    if (currentTab.value == "groups") {
-      let finded = groups.value.filter((item) => {
-        return item.name.includes(searchQuery.value);
-      });
-      return finded;
-    }
+  if(currentTab.value == 'all'){
+      const combinedData = [
+      ...users.value.map((user) => ({ ...user, type: 'user' })),
+      ...groups.value.map((group) => ({ ...group, type: 'group' })),
+    ];
+    return searchQuery.value ? combinedData.filter((item) => item.name.toLowerCase().includes(searchQuery.value)) : combinedData;
   }
-});
+  if(currentTab.value == 'users'){
+      return searchQuery.value ? users.value.filter((user) => user.name.toLowerCase().includes(searchQuery.value)) : users.value
+  }
+  if(currentTab.value == 'groups'){
+      return searchQuery.value ? groups.value.filter((group) => group.name.toLowerCase().includes(searchQuery.value)) : groups.value
+  }
+})
+
 const logout = () => {
   CometChat.logout().then(
     () => {

@@ -1,5 +1,5 @@
 <template>
-    <div dir="rtl" class="h-screen flex flex-col gap-10 bg-gray-900 text-white">
+    <div dir="rtl" class="h-dvh flex flex-col gap-10 bg-gray-900 text-white">
         <div class="flex items-center justify-between p-8">
             <div>پروفایل من</div>
             <div @click="go_back">
@@ -55,7 +55,7 @@ const loginUserInfo = ref({
 })
 
 const fetch_profile_data = () => {
-    CometChat.getUser(authStore.loginInfo.uid)
+    CometChat.getUser(authStore.userLoginInfo.uid)
     .then(
         user => {
             console.log(user);
@@ -73,7 +73,7 @@ const upload_image = (e) => {
 }
 
 const updateUserDetails = () => {
-    const user = new CometChat.User(authStore.loginInfo.uid);
+    const user = new CometChat.User(authStore.userLoginInfo.uid);
     user.setName(loginUserInfo.value.name);
     user.setAvatar(loginUserInfo.value.avatar);
     CometChat.updateCurrentUserDetails(user)
@@ -82,9 +82,9 @@ const updateUserDetails = () => {
         loginUserInfo.value = updatedUser
         authStore.setLoginInfo(updatedUser)
         const updatedUserInfo = {
-        ...authStore.loginInfo,
+        ...authStore.userLoginInfo,
       };
-      localStorage.setItem('loginInfo', JSON.stringify(updatedUserInfo));
+      localStorage.setItem('userLoginInfo', JSON.stringify(updatedUserInfo));
     })
     .catch(error => {
         console.log('can not update user:', error);

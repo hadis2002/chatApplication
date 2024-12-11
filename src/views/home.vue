@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-gray-900 h-screen">
+  <div class="bg-gray-900 h-dvh">
     <div class="h-[15%] flex justify-center items-center">
       <div
         class="relative w-[60%] bg-white py-2.5 px-4 rounded-full flex justify-center items-center"
@@ -191,33 +191,38 @@ const fetch_groups = () => {
     });
 };
 const filteredResults = computed(() => {
-  if(currentTab.value == 'all'){
-      const combinedData = [
-      ...users.value.map((user) => ({ ...user, type: 'user' })),
-      ...groups.value.map((group) => ({ ...group, type: 'group' })),
+  if (currentTab.value == "all") {
+    const combinedData = [
+      ...users.value.map((user) => ({ ...user, type: "user" })),
+      ...groups.value.map((group) => ({ ...group, type: "group" })),
     ];
-    return searchQuery.value ? combinedData.filter((item) => item.name.toLowerCase().includes(searchQuery.value)) : combinedData;
+    return searchQuery.value
+      ? combinedData.filter((item) =>
+          item.name.toLowerCase().includes(searchQuery.value)
+        )
+      : combinedData;
   }
-  if(currentTab.value == 'users'){
-      return searchQuery.value ? users.value.filter((user) => user.name.toLowerCase().includes(searchQuery.value)) : users.value
+  if (currentTab.value == "users") {
+    return searchQuery.value
+      ? users.value.filter((user) =>
+          user.name.toLowerCase().includes(searchQuery.value)
+        )
+      : users.value;
   }
-  if(currentTab.value == 'groups'){
-      return searchQuery.value ? groups.value.filter((group) => group.name.toLowerCase().includes(searchQuery.value)) : groups.value
+  if (currentTab.value == "groups") {
+    return searchQuery.value
+      ? groups.value.filter((group) =>
+          group.name.toLowerCase().includes(searchQuery.value)
+        )
+      : groups.value;
   }
-})
+});
 
 const logout = () => {
-  CometChat.logout().then(
-    () => {
-      console.log("Logout completed successfully");
-      authStore.removeLoginInfo();
-      localStorage.removeItem("loginInfo");
-      router.push({ name: "login" });
-    },
-    (error) => {
-      console.log("Logout failed with exception:", { error });
-    }
-  );
+  authStore.removeLoginInfo();
+  localStorage.removeItem("userLoginInfo");
+  console.log("Logout completed successfully");
+  router.push({ name: "login" });
 };
 const go_profile_page = () => {
   router.push({ name: "profile" });

@@ -1,5 +1,5 @@
 <template>
-  <div dir="rtl" class="bg-[#2e333d] h-screen w-full">
+  <div dir="rtl" class="bg-[#2e333d] h-dvh w-full">
     <div
       class="h-[10%] w-full flex items-center justify-between px-7 bg-[#21242b]"
     >
@@ -80,10 +80,10 @@
           :class="{
             'justify-start':
               (message.sender?.uid || message.sender) ==
-              authStore.loginInfo.uid,
+              authStore.userLoginInfo.uid,
             'justify-end':
               (message.sender?.uid || message.sender) !=
-              authStore.loginInfo.uid,
+              authStore.userLoginInfo.uid,
           }"
         >
           <div
@@ -91,30 +91,31 @@
             :class="{
               'flex-row':
                 (message.sender?.uid || message.sender) ==
-                authStore.loginInfo.uid,
+                authStore.userLoginInfo.uid,
               'flex-row-reverse':
                 (message.sender?.uid || message.sender) !=
-                authStore.loginInfo.uid,
+                authStore.userLoginInfo.uid,
             }"
           >
             <img
               :src="
                 (message.sender?.uid || message.sender) ==
-                authStore.loginInfo.uid
-                  ? authStore.loginInfo.avatar || defaultProfile
+                authStore.userLoginInfo.uid
+                  ? ''
                   : userData.avatar || defaultProfile
               "
               class="w-10 h-10 rounded-full"
+              :class="(message.sender?.uid || message.sender) == authStore.userLoginInfo.uid ? 'hidden' : ''"
             />
             <div
               class="p-3 rounded-lg max-w-xs"
               :class="{
                 'bg-blue-500 text-white':
                   (message.sender?.uid || message.sender) ==
-                  authStore.loginInfo.uid,
+                  authStore.userLoginInfo.uid,
                 'bg-purple-500 text-white':
                   (message.sender?.uid || message.sender) !=
-                  authStore.loginInfo.uid,
+                  authStore.userLoginInfo.uid,
               }"
             >
               <p>{{ message.data.text }}</p>
@@ -202,7 +203,7 @@ const messageForm = ref({
   data: {
     text: "",
   },
-  sender: authStore.loginInfo.uid,
+  sender: authStore.userLoginInfo.uid,
 });
 const fetch_user_data = () => {
   axiosConfig
@@ -226,16 +227,16 @@ const fetch_user_messages = () => {
       `users/${route.params.userId}/messages?myMentionsOnly=false&hasReactions=false&mentionsWithBlockedInfo=false&mentionswithTagInfo=false&perPage=100`
     )
     .then((res) => {
-      messages.value = res.data.data.map((message) => {
-        if (message.sender === "app_system") {
-          message.sender = authStore.loginInfo.uid;
-        }
-        return message;
-      });
-      console.log(messages.value, "user messages");
-      setTimeout(() => {
-        scrollToBottom();
-      }, 100);
+        messages.value = res.data.data.map((message) => {
+            if (message.sender == "app_system") {
+            message.sender = authStore.userLoginInfo.uid;
+            }
+            return message;
+        });
+        console.log(messages.value, "user messages");
+        setTimeout(() => {
+            scrollToBottom();
+        }, 100);
     })
     .catch((error) => {
       console.log(error);
@@ -252,28 +253,14 @@ const send_message = (newMessage) => {
   axiosConfig
     .post("messages", newMessage)
     .then((res) => {
+      res.data.data.sender = authStore.userLoginInfo.uid
       console.log(res.data.data, "message sent");
-      //   newMessage.sender = authStore.loginInfo.uid;
-      //   res.data.data.sender = authStore.loginInfo.uid;
+      // CometChat.connect();  
     })
     .catch((error) => {
       console.log(error);
     });
 };
-
-const socket = new WebSocket("wss://eu.cometchat.io/ws");
-socket.onopen = () => {
-  console.log("WebSocket connected");
-  const authMessage = {
-    type: "auth",
-    appId: "2656060da2d3fa35",
-    region: "eu",
-    authKey: "b1341fca8190cdb65b8ed64a4d0ca2f70949634f",
-    uid: authStore.loginInfo.uid,
-  };
-  socket.send(JSON.stringify(authMessage));
-};
-
 
 const scrollToBottom = () => {
   chatContainer.value.scrollTop = chatContainer.value.scrollHeight;

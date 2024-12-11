@@ -3,7 +3,7 @@ import { useLocalStorage } from '@vueuse/core';
 
 export const useAuthStore = defineStore('user', {
   state: () => ({
-    loginInfo: useLocalStorage('loginInfo',  {
+    userLoginInfo: useLocalStorage('userLoginInfo',  {
         authToken: '',
         avatar: '',
         blockedByMe: '',
@@ -18,13 +18,13 @@ export const useAuthStore = defineStore('user', {
   }),
   actions: {
     setLoginInfo(user) {
-      this.loginInfo = user;
+      this.userLoginInfo = user;
     },
     removeLoginInfo() {
-      this.loginInfo = null;
+      this.userLoginInfo = null;
     }
   },
   getters: {
-    getLoginInfo: (state) => state.loginInfo,
+    getLoginInfo: (state) => state.userLoginInfo,
   },
 });

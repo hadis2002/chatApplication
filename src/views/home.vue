@@ -172,9 +172,9 @@ const close_sidebar = () => {
 };
 const fetch_users = () => {
   axiosConfig
-    .get("users?perPage=100&page=1")
+    .get("users")
     .then((res) => {
-      users.value = res.data.data;
+      users.value = res.data.data.filter( user => user.uid !== authStore.userLoginInfo.uid )
     })
     .catch((error) => {
       console.log(error, "error");

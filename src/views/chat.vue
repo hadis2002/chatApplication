@@ -105,7 +105,12 @@
                   : userData.avatar || defaultProfile
               "
               class="w-10 h-10 rounded-full"
-              :class="(message.sender?.uid || message.sender) == authStore.userLoginInfo.uid ? 'hidden' : ''"
+              :class="
+                (message.sender?.uid || message.sender) ==
+                authStore.userLoginInfo.uid
+                  ? 'hidden'
+                  : ''
+              "
             />
             <div
               class="p-3 rounded-lg max-w-xs"
@@ -223,25 +228,31 @@ const validMessages = computed(() => {
 
 const fetch_user_messages = () => {
   axiosConfig
-    .get(
-      `users/${route.params.userId}/messages?myMentionsOnly=false&hasReactions=false&mentionsWithBlockedInfo=false&mentionswithTagInfo=false&perPage=100`
-    )
+    .get(`users/${route.params.userId}/messages`)
     .then((res) => {
-        messages.value = res.data.data.map((message) => {
-            if (message.sender == "app_system") {
-            message.sender = authStore.userLoginInfo.uid;
-            }
-            return message;
-        });
-        console.log(messages.value, "user messages");
-        setTimeout(() => {
-            scrollToBottom();
-        }, 100);
+      const currentUserId = authStore.userLoginInfo.uid;
+      const targetUserId = route.params.userId;
+      messages.value = res.data.data.reduce((filteredMessages, message) => {
+        if(message.sender === "app_system"){
+          message.sender = currentUserId
+        }
+        if (
+          (message.sender === currentUserId && message.receiver === targetUserId) ||
+          (message.sender === targetUserId && message.receiver === currentUserId)
+        ) {
+          filteredMessages.push(message);
+        }
+        return filteredMessages;
+      }, []);
+
+      console.log(messages.value, "user messages");
+      setTimeout(scrollToBottom, 100);
     })
     .catch((error) => {
       console.log(error);
     });
 };
+
 
 const append_message = () => {
   const newMessage = { ...messageForm.value };
@@ -253,9 +264,9 @@ const send_message = (newMessage) => {
   axiosConfig
     .post("messages", newMessage)
     .then((res) => {
-      res.data.data.sender = authStore.userLoginInfo.uid
+      res.data.data.sender = authStore.userLoginInfo.uid;
       console.log(res.data.data, "message sent");
-      // CometChat.connect();  
+      // CometChat.connect();
     })
     .catch((error) => {
       console.log(error);

@@ -275,7 +275,7 @@ socket.onmessage = (event) => {
   // اضافه کردن پیام جدید به لیست پیام‌ها
   messages.value.push(newMessage);
 
-  setTimeout(scrollToBottom, 100); // اسکرول به پایین
+  setTimeout(scrollToBottom, 100); // اسکرول به پایی/ن
 };
 
 // ارسال پیام از طریق WebSocket

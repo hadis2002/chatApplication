@@ -45,7 +45,7 @@
 
 <script lang="ts" setup>
 import { ref } from "vue";
-import { CometChat } from "@cometchat/chat-sdk-javascript";
+import { CometChat } from "@cometchat-pro/chat";
 import { useRouter } from "vue-router";
 import axiosConfig from "../../src/axiosConfig";
 import { useAuthStore } from "../stores/authStore";
@@ -72,11 +72,11 @@ const submit_form = () => {
 
 <style>
 @font-face {
-  font-family: BYekan;
-  src: url("../../public/font/Yekan.ttf");
+  font-family: Poppins;
+  src: url("../../public/font/Poppins-Light.ttf");
 }
 body {
-  font-family: BYekan;
+  font-family: 'Poppins';
 }
 .clip-wave {
   clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%);

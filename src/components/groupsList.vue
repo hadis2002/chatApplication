@@ -6,7 +6,7 @@
         <div class="flex flex-col w-full">
             <div class="flex justify-between items-center">
             <div class="font-semibold text-[16px]">{{ group.name }}</div>
-            <div class="text-gray-300 text-xs" :class="group.updatedAt ? 'block' : 'hidden'">{{ new Date(group.updatedAt * 1000).toLocaleTimeString('fa') }}</div>
+            <div class="text-gray-300 text-xs" :class="group.updatedAt ? 'block' : 'hidden'">{{ new Date(group.updatedAt * 1000).toLocaleTimeString('en') }}</div>
             </div>
         </div>
     </div>

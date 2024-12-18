@@ -21,7 +21,7 @@
           class="text-gray-300 text-xs"
           :class="user.lastActiveAt ? 'block' : 'hidden'"
         >
-          {{ new Date(user.lastActiveAt * 1000).toLocaleTimeString("fa") }}
+          {{ new Date(user.lastActiveAt * 1000).toLocaleTimeString("en") }}
         </div>
       </div>
     </div>

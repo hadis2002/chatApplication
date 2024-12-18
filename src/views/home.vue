@@ -1,147 +1,100 @@
 <template>
-  <div class="bg-gray-900 h-dvh">
-    <div class="h-[15%] flex justify-center items-center">
-      <div
-        class="relative w-[60%] bg-white py-2.5 px-4 rounded-full flex justify-center items-center"
-      >
-        <input
-          @keyup="searchQuery = $event.target.value"
-          type="text"
-          class="search-box text-right me-7 w-full text-sm outline-none"
-          placeholder="جستجو"
-        />
-        <div class="absolute right-4">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#D3D3D3"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-        </div>
-      </div>
-      <div class="menu-box w-[20%] flex justify-end">
-        <svg
-          @click="toggle_sidebar"
-          class="w-6 h-6"
-          xmlns="http://www.w3.org/2000/svg"
-          x="0px"
-          y="0px"
-          width="100"
-          height="100"
-          viewBox="0 0 30 30"
-        >
-          <path
-            fill="#fff"
-            d="M 3 7 A 1.0001 1.0001 0 1 0 3 9 L 27 9 A 1.0001 1.0001 0 1 0 27 7 L 3 7 z M 3 14 A 1.0001 1.0001 0 1 0 3 16 L 27 16 A 1.0001 1.0001 0 1 0 27 14 L 3 14 z M 3 21 A 1.0001 1.0001 0 1 0 3 23 L 27 23 A 1.0001 1.0001 0 1 0 27 21 L 3 21 z"
-          ></path>
-        </svg>
-      </div>
-      <transition
-        enter-active-class="transition ease-out duration-300"
-        enter-from-class="transform opacity-0 -translate-x-full"
-        enter-to-class="transform opacity-100 -translate-x-0"
-        leave-active-class="transition ease-in duration-200"
-        leave-from-class="transform opacity-100 -translate-x-0"
-        leave-to-class="transform opacity-0 -translate-x-full"
-      >
-        <div
-          v-if="sidebar"
-          class="menu-content bg-black w-full h-full fixed top-0 bg-opacity-60 z-30"
-          @click="close_sidebar"
-        >
-          <div
-            class="bg-slate-900 h-full w-[50%] fixed right-0 top-0 z-50 transition-transform transform"
-            :class="{ 'translate-x-0': sidebar, '-translate-x-full': !sidebar }"
-          >
-            <div class="h-full p-10">
-              <div
-                @click="close_sidebar"
-                class="flex h-[10%] justify-end cursor-pointer"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#ffffff"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="feather feather-x"
+  <div class="bg-[#111016] h-dvh">
+
+    <div class="h-[15%] flex flex-row-reverse justify-between px-8 items-center">
+        <div class="flex flex-row-reverse gap-4 items-center">
+            <Menu as="div" class="relative inline-block text-left">
+                <MenuButton
+                  class="bg-[#486BE717] z-50 relative px-4 py-3 rounded-lg"
                 >
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </div>
-              <div class="h-[80%]">
-                <ul dir="rtl" class="flex flex-col gap-10 text-white">
-                  <li>تنظیمات</li>
-                  <li @click="logout">خروچ از حساب</li>
-                  <li>ایجاد گروه</li>
-                  <li @click="go_profile_page">پروفایل من</li>
-                  <li>دعوت دوستان</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </transition>
+                  <div aria-hidden="true" class="z-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="4" height="16" viewBox="0 0 4 16" fill="none">
+                      <circle cx="2" cy="2" r="2" fill="#486BE7"/>
+                      <circle cx="2" cy="8" r="2" fill="#486BE7"/>
+                      <circle cx="2" cy="14" r="2" fill="#486BE7"/>
+                    </svg>
+                  </div>
+                </MenuButton>
+
+                <transition
+                  enter-active-class="transition duration-100 ease-out"
+                  enter-from-class="transform scale-95 opacity-0"
+                  enter-to-class="transform scale-100 opacity-100"
+                  leave-active-class="transition duration-75 ease-in"
+                  leave-from-class="transform scale-100 opacity-100"
+                  leave-to-class="transform scale-95 opacity-0"
+                >
+                  <MenuItems
+                    class="absolute top-12 end-0 border w-[130px] text-left border-gray-600 px-4 font-semibold py-2 text-sm flex flex-col gap-3 text-white bg-[#1b1922] rounded-lg z-50"
+                  >
+                      <MenuItem v-slot="{ active }">
+                        <button class="text-left">Setting</button>
+                      </MenuItem>
+                      <MenuItem v-slot="{ active }">
+                        <button class="text-left">New Group</button>
+                      </MenuItem>
+                      <MenuItem v-slot="{ active }">
+                        <button @click="go_profile_page" class="text-left">Profile</button>
+                      </MenuItem>
+                      <MenuItem v-slot="{ active }">
+                        <button @click="logout" class="text-left">Logout</button>
+                      </MenuItem>
+                  </MenuItems>
+                </transition>
+            </Menu>
+            <button class="bg-[#486BE717] relative px-3 py-3 rounded-lg">
+              <input
+                @keyup="searchQuery = $event.target.value"
+                type="text"
+                class=" absolute bg-transparent text-sm outline-none"
+                placeholder=""
+              />
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <g clip-path="url(#clip0_1_360)">
+                  <path d="M17.795 16.8053L13.4021 12.4126C14.494 11.0995 15.1519 9.41337 15.1519 7.57617C15.1519 3.39865 11.7533 0 7.57599 0C3.39856 0 0 3.39865 0 7.57617C0 11.7534 3.39856 15.1518 7.57599 15.1518C9.41309 15.1518 11.0993 14.494 12.4124 13.4021L16.8053 17.795C16.9419 17.9317 17.1211 18 17.3002 18C17.4792 18 17.6584 17.9317 17.7951 17.795C18.0684 17.5217 18.0684 17.0786 17.795 16.8053ZM1.39966 7.57617C1.39966 4.17043 4.17033 1.39966 7.57599 1.39966C10.9815 1.39966 13.7521 4.17043 13.7521 7.57617C13.7521 10.9816 10.9815 13.7521 7.57599 13.7521C4.17033 13.7521 1.39966 10.9816 1.39966 7.57617Z" fill="#486BE7"/>
+                </g>
+                <defs>
+                  <clipPath id="clip0_1_360">
+                    <rect width="18" height="18" fill="white"/>
+                  </clipPath>
+                </defs>
+              </svg>
+            </button>
+        </div> 
+        <div class="text-white font-semibold">HOME</div>
     </div>
     <div class="h-[85%] flex flex-col items-center">
       <TabGroup>
-        <TabList class="flex justify-around h-[12%] w-[90%]">
+        <TabList class="flex justify-around h-[8%] w-[90%] border-b border-[#1B1620]">
           <Tab
-            @click="currentTab = 'all'"
-            class="!bg-transparent text-white outline-none"
+            @click="currentTab = 'chats'"
+            class="!bg-transparent text-white outline-none text-sm focus:border-b-[3px] focus:border-[#1053FF] focus:text-[#6a87ee]"
           >
-            همه گفت و گو ها
+             CHATS
           </Tab>
           <Tab
-            @click="currentTab = 'users'"
-            class="!bg-transparent text-white outline-none"
+            @click="currentTab = 'status'"
+            class="!bg-transparent text-white outline-none text-sm focus:border-b-[3px] focus:border-[#1053FF] focus:text-[#6a87ee]"
           >
-            مخاطبین
+            STATUS
           </Tab>
           <Tab
-            @click="currentTab = 'groups'"
-            class="!bg-transparent text-white outline-none"
+            @click="currentTab = 'calls'"
+            class="!bg-transparent text-white outline-none text-sm focus:border-b-[3px] focus:border-[#1053FF] focus:text-[#6a87ee]"
           >
-            گروه ها
+           CALLS
           </Tab>
         </TabList>
 
-        <TabPanels class="h-[88%] w-full">
+        <TabPanels class="h-[92%] w-full pt-5">
           <TabPanel class="h-full overflow-auto px-5">
             <div v-for="item in filteredResults" :key="item.id">
               <usersList v-if="item.type === 'user'" :user="item" />
               <groupsList v-if="item.type === 'group'" :group="item" />
             </div>
           </TabPanel>
-
-          <TabPanel class="h-full overflow-auto px-5">
-            <usersList
-              v-for="user in filteredResults"
-              :key="user"
-              :user="user"
-            ></usersList>
-          </TabPanel>
-
-          <TabPanel class="h-full overflow-auto px-5">
-            <groupsList
-              v-for="group in filteredResults"
-              :key="group"
-              :group="group"
-            ></groupsList>
-          </TabPanel>
+          <TabPanel class="h-full overflow-auto px-5"></TabPanel>
+          <TabPanel class="h-full overflow-auto px-5"></TabPanel>
         </TabPanels>
       </TabGroup>
     </div>
@@ -156,20 +109,14 @@ import usersList from "../components/usersList.vue";
 import groupsList from "../components/groupsList.vue";
 import { CometChat } from "@cometchat-pro/chat";
 import { useRouter } from "vue-router";
+import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 import { useAuthStore } from "../stores/authStore";
 const router = useRouter();
 const authStore = useAuthStore();
-const sidebar = ref(false);
 const users = ref([]);
 const groups = ref([]);
 const searchQuery = ref("");
 const currentTab = ref("all");
-const toggle_sidebar = () => {
-  sidebar.value = true;
-};
-const close_sidebar = () => {
-  sidebar.value = false;
-};
 const fetch_users = () => {
   axiosConfig
     .get("users")
@@ -191,7 +138,6 @@ const fetch_groups = () => {
     });
 };
 const filteredResults = computed(() => {
-  if (currentTab.value == "all") {
     const combinedData = [
       ...users.value.map((user) => ({ ...user, type: "user" })),
       ...groups.value.map((group) => ({ ...group, type: "group" })),
@@ -201,21 +147,6 @@ const filteredResults = computed(() => {
           item.name.toLowerCase().includes(searchQuery.value)
         )
       : combinedData;
-  }
-  if (currentTab.value == "users") {
-    return searchQuery.value
-      ? users.value.filter((user) =>
-          user.name.toLowerCase().includes(searchQuery.value)
-        )
-      : users.value;
-  }
-  if (currentTab.value == "groups") {
-    return searchQuery.value
-      ? groups.value.filter((group) =>
-          group.name.toLowerCase().includes(searchQuery.value)
-        )
-      : groups.value;
-  }
 });
 
 const logout = () => {
@@ -234,18 +165,5 @@ onMounted(() => {
 </script>
 
 <style>
-.tabs {
-  display: flex;
-  cursor: pointer;
-}
-.tabs button {
-  border: none;
-  background-color: #f0f0f0;
-}
-.tabs button.active {
-  background-color: #d3d3d3;
-  font-weight: bold;
-  border-bottom: 3px solid rgb(155, 131, 221);
-  color: rgb(155, 131, 221);
-}
+
 </style>

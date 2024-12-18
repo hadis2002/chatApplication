@@ -233,7 +233,6 @@ const fetch_user_messages = () => {
       const currentUserId = authStore.userLoginInfo.uid;
       const targetUserId = route.params.userId;
 
-      // فیلتر پیام‌های مربوط به کاربر جاری
       messages.value = res.data.data.reduce((filteredMessages, message) => {
         if (message.sender === "app_system") {
           message.sender = currentUserId;
@@ -257,15 +256,12 @@ const fetch_user_messages = () => {
     });
 };
 
-// اتصال به WebSocket
 const socket = new WebSocket("wss://echo.websocket.org");
 
-// وقتی اتصال برقرار می‌شود
 socket.onopen = () => {
   console.log("Connected to WebSocket server");
 };
 
-// وقتی پیام جدید از سرور WebSocket دریافت می‌شود
 socket.onmessage = (event) => {
   console.log("Received message from WebSocket:", event.data);
 
@@ -275,35 +271,26 @@ socket.onmessage = (event) => {
   // اضافه کردن پیام جدید به لیست پیام‌ها
   messages.value.push(newMessage);
 
-  setTimeout(scrollToBottom, 100); // اسکرول به پایی/ن
+  setTimeout(scrollToBottom, 100); // اسکرول به پایین
 };
 
 // ارسال پیام از طریق WebSocket
 const send_message_via_socket = (message) => {
-  const messageData = { ...message, timestamp: new Date().toISOString() }; // افزودن زمان پیام
-  socket.send(JSON.stringify(messageData)); // ارسال پیام به WebSocket
-  console.log("Sent message via WebSocket:", messageData);
-
-  // اضافه کردن پیام به لیست پیام‌ها فوراً برای نمایش
+  const messageData = { ...message };
+  socket.send(JSON.stringify(messageData));
+  console.log(messageData , '///////////');
+  
   messages.value.push(messageData);
-  setTimeout(scrollToBottom, 100); // اسکرول به پایین
+  setTimeout(scrollToBottom, 100);
 };
 
-// ارسال پیام (هم API و هم WebSocket)
 const append_message = () => {
   const newMessage = { ...messageForm.value };
-
-  // ارسال پیام به API
   send_message(newMessage);
-
-  // ارسال پیام به WebSocket
   send_message_via_socket(newMessage);
-
-  // پاک کردن فرم
-  messageForm.value.data.text = "";
+  // newMessage.data.text = "";
 };
 
-// ارسال پیام به API
 const send_message = (newMessage) => {
   axiosConfig
     .post("messages", newMessage)
@@ -315,7 +302,6 @@ const send_message = (newMessage) => {
       console.log(error);
     });
 };
-
 
 const scrollToBottom = () => {
   chatContainer.value.scrollTop = chatContainer.value.scrollHeight;

@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-[#111016] h-dvh">
+  <div class="bg-[#111016] w-full h-dvh">
 
     <div dir="rtl"class="h-[15%] flex justify-between px-8 items-center">
         <div class="flex flex-row-reverse gap-4 items-center">
@@ -27,16 +27,16 @@
                   <MenuItems
                     class="absolute top-12 -start-14 border w-[130px] text-left border-gray-600 px-4 font-semibold py-2 text-sm flex flex-col gap-3 text-white bg-[#1b1922] rounded-lg z-50"
                   >
-                      <MenuItem v-slot="{ active }">
+                      <MenuItem>
                         <button class="text-left">Setting</button>
                       </MenuItem>
-                      <MenuItem v-slot="{ active }">
+                      <MenuItem>
                         <button class="text-left">New Group</button>
                       </MenuItem>
-                      <MenuItem v-slot="{ active }">
+                      <MenuItem>
                         <button @click="go_profile_page" class="text-left">Profile</button>
                       </MenuItem>
-                      <MenuItem v-slot="{ active }">
+                      <MenuItem>
                         <button @click="logout" class="text-left">Logout</button>
                       </MenuItem>
                   </MenuItems>
@@ -86,7 +86,7 @@
           </Tab>
         </TabList>
 
-        <TabPanels class="h-[92%] w-full pt-5">
+        <TabPanels class="h-[92%] w-full pt-5 overflow-auto">
           <TabPanel class="h-full overflow-auto px-5">
             <div v-for="item in filteredResults" :key="item.id">
               <usersList v-if="item.type === 'user'" :user="item" />

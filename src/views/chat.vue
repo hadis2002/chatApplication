@@ -67,89 +67,67 @@
         </div>
     </div>
     <div ref="chatContainer" class="h-[80%] scroll-smooth overflow-auto">
-        <div v-if="validMessages.length == 0"
+      <div
+        v-if="validMessages.length === 0"
+        class="h-full flex flex-col gap-3 justify-center items-center"
+      >
+        <img class="w-[50%]" src="../../public/images/empty-chat.png" alt="" />
+        <p class="text-white text-lg opacity-60">گفت و گو را آغاز کنید.</p>
+      </div>
+      <div v-else v-for="message in validMessages" :key="message.id">
+        <div
           class="flex"
           :class="{
             'justify-start':
-              (message.sender?.uid || message?.sender) ==
+              (message.sender?.uid || message.sender) ==
               authStore.userLoginInfo.uid,
             'justify-end':
-              (message.sender?.uid || message?.sender) !=
+              (message.sender?.uid || message.sender) !=
               authStore.userLoginInfo.uid,
           }"
         >
-          <img class="w-[50%]" src="../../public/images/empty-chat.png" alt="" />
-          <p class="text-white text-lg opacity-60">گفت و گو را آغاز کنید.</p>
-        </div>
-        <div v-else v-for="message in validMessages" :key="message.id">
           <div
-            class="flex"
+            class="flex items-start gap-2 p-3 w-fit"
             :class="{
               'flex-row':
-                (message.sender?.uid || message?.sender) ==
+                (message.sender?.uid || message.sender) ==
                 authStore.userLoginInfo.uid,
               'flex-row-reverse':
-                (message.sender?.uid || message?.sender) !=
+                (message.sender?.uid || message.sender) !=
                 authStore.userLoginInfo.uid,
             }"
           >
             <img
               :src="
-                (message.sender?.uid || message?.sender) ==
+                (message.sender?.uid || message.senderId) ==
                 authStore.userLoginInfo.uid
                   ? ''
                   : userData.avatar || defaultProfile
               "
               class="w-10 h-10 rounded-full"
               :class="
-                (message.sender?.uid || message?.sender) ==
+                (message.sender?.uid || message.sender) ==
                 authStore.userLoginInfo.uid
                   ? 'hidden'
                   : ''
               "
             />
             <div
-              class="flex items-start gap-2 p-3 w-fit"
+              class="p-3 rounded-lg max-w-xs"
               :class="{
                 'bg-blue-500 text-white':
-                  (message.sender?.uid || message?.sender) ==
+                  (message.sender?.uid || message.sender) ==
                   authStore.userLoginInfo.uid,
                 'bg-purple-500 text-white':
-                  (message.sender?.uid || message?.sender) !=
+                  (message.sender?.uid || message.sender) !=
                   authStore.userLoginInfo.uid,
               }"
             >
-              <img
-                :src="
-                  (message.sender?.uid || message.senderId) ==
-                  authStore.userLoginInfo.uid
-                    ? ''
-                    : userData.avatar || defaultProfile
-                "
-                class="w-10 h-10 rounded-full"
-                :class="
-                  (message.sender?.uid || message.sender) ==
-                  authStore.userLoginInfo.uid
-                    ? 'hidden'
-                    : ''
-                "
-              />
-              <div
-                class="p-3 rounded-lg max-w-xs"
-                :class="{
-                  'bg-blue-500 text-white':
-                    (message.sender?.uid || message.senderId) ==
-                    authStore.userLoginInfo.uid,
-                  'bg-purple-500 text-white':
-                    (message.sender?.uid || message.senderId) !=
-                    authStore.userLoginInfo.uid,
-                }"
-              >
-                <p>{{ message.data.text }}</p>
-              </div>
+              <p>{{ message.data.text }}</p>
             </div>
           </div>
         </div>
+      </div>
     </div>
     <div class="bg-[#21242b] flex items-center justify-between px-5 h-[10%]">
         <div class="flex items-center gap-2">
@@ -185,7 +163,7 @@
           <div>
             <input
               @keydown.enter="append_message"
-              v-model.trim="messageForm.messageText"
+              v-model.trim="messageForm.data.text"
               type="text"
               class="bg-transparent placeholder:text-gray-400 outline-none text-white"
               placeholder="پیام خود را بنویسید."
@@ -225,12 +203,12 @@ const chatContainer = ref(null);
 let messages = ref([]);
 const userData = ref([]);
 const messageForm = ref({
-  receiverID: route.params.userId,
+  receiver: route.params.userId,
   receiverType: "user",
   data: {
-    text: "",
+    text: '',
   },
-  senderId: authStore.userLoginInfo.uid,
+  sender: authStore.userLoginInfo.uid,
 });
 const fetch_user_data = () => {
   axiosConfig
@@ -248,56 +226,93 @@ const validMessages = computed(() => {
   return messages.value.filter((message) => message.data && message.data.text);
 });
 
-const fetch_user_messages = () => {
-  axiosConfig
-    .get(`users/${route.params.userId}/messages?limit=1000`)
-    .then((res) => {
-      console.log(res.data.data);
-      
-      const currentUserId = authStore.userLoginInfo.uid;
-      const targetUserId = route.params.userId;
-      messages.value = res.data.data.reduce((filteredMessages, message) => {
-        
-        if (message.sender === "app_system") {
-          message.sender = currentUserId;
-        }
-        if (
-          (message.senderId === currentUserId &&
-            message.receiverID === targetUserId) ||
-          (message.senderId === targetUserId &&
-            message.receiverID === currentUserId)
-        ) {
-          filteredMessages.push(message);
-        }
+const fetch_user_messages = async () => {
+  let allMessages = [], page = 1;
 
-        console.log(message.sender, "message.sender");
-console.log(authStore.userLoginInfo.uid, "current user id");
+  try {
+    while (true) {
+      // دریافت پیام‌ها برای کاربر خاص (شناسه کاربری از `route.params.userId`)
+      const { data, meta } = await axiosConfig.get(
+        `users/${route.params.userId}/messages`,
+        { params: { limit: 100, page } }
+      ).then(res => res.data);
 
-        return filteredMessages;
-      }, []);
-
-      console.log(messages.value, "user messages");
-      setTimeout(scrollToBottom, 100);
-    })
-    .catch((error) => {
-      console.log(error);
-    });
+      allMessages.push(...data);
+      if (page++ >= meta.pagination.total_pages) break;
+    }
+    // مرتب‌سازی پیام‌ها بر اساس sentAt (برای ترتیب زمانی)
+    allMessages.sort((a, b) => a.sentAt - b.sentAt);
+    messages.value = allMessages;
+    setTimeout(scrollToBottom, 100); // اسکرول به پایین پس از بارگذاری پیام‌ها
+  } catch (error) {
+    console.error("Error fetching messages:", error);
+  }
 };
 
+
+
+
+// const fetch_user_messages = () => {
+//   axiosConfig
+//     .get(`users/${route.params.userId}/messages?limit=1000`)
+//     .then((res) => {
+//       console.log(res.data.data);
+      
+// //       const currentUserId = authStore.userLoginInfo.uid;
+// //       const targetUserId = route.params.userId;
+// //       messages.value = res.data.data.reduce((filteredMessages, message) => {
+        
+// //         if (message.sender === "app_system") {
+// //           message.sender = currentUserId;
+// //         }
+// //         if (
+// //           (message.senderId === currentUserId &&
+// //             message.receiverID === targetUserId) ||
+// //           (message.senderId === targetUserId &&
+// //             message.receiverID === currentUserId)
+// //         ) {
+// //           filteredMessages.push(message);
+// //         }
+
+// //         console.log(message.sender, "message.sender");
+// // console.log(authStore.userLoginInfo.uid, "current user id");
+
+// //         return filteredMessages;
+// //       }, []);
+//       messages.value = res.data.data
+//       console.log(messages.value, "user messages");
+//       setTimeout(scrollToBottom, 100);
+//     })
+//     .catch((error) => {
+//       console.log(error);
+//     });
+// };
 
 const append_message = () => {
-  const newMessage = { ...messageForm.value };
-  messages.value.push(newMessage)
-  send_message(newMessage);
-  // messageForm.value.data.text = "";
+  const newMessage = {
+    receiver: messageForm.value.receiver,
+    receiverType: messageForm.value.receiverType,
+    sender: messageForm.value.sender,
+    data: {
+      text: messageForm.value.data.text,
+    },
+    sentAt: Date.now(), // اضافه کردن زمان ارسال پیام
+  };
+  messages.value.push(newMessage); // افزودن پیام جدید به لیست پیام‌ها
+  send_message(newMessage); // ارسال پیام به سرور
+  messageForm.value.data.text = ""; // پاک کردن متن پیام پس از ارسال
 };
+
+
 
 const send_message = (newMessage) => {
   axiosConfig
     .post("/messages", newMessage)
     .then((res) => {
-      res.data.data.sender = authStore.userLoginInfo.uid;
-      scrollToBottom()
+      res.data.data.sender = authStore.userLoginInfo.uid; // تعیین فرستنده پیام
+      messages.value.push(res.data.data); // اضافه کردن پیام به لیست پیام‌ها
+      messages.value.sort((a, b) => a.sentAt - b.sentAt); // مرتب‌سازی پیام‌ها بر اساس زمان ارسال
+      scrollToBottom(); // اسکرول به پایین پس از ارسال پیام
       console.log(res.data.data, "message sent");
     })
     .catch((error) => {
@@ -305,22 +320,6 @@ const send_message = (newMessage) => {
     });
 };
 
-// let receiverID = route.params.userId;
-// let messageText = messageForm.value.messageText;
-// let receiverType = CometChat.RECEIVER_TYPE.USER;
-// let textMessage = new CometChat.TextMessage(
-//   receiverID,
-//   messageText,
-//   receiverType
-// );
-// CometChat.sendMessage(textMessage).then(
-//   (message) => {
-//     console.log("Message sent successfully:", message);
-//   },
-//   (error) => {
-//     console.log("Message sending failed with error:", error);
-//   }
-// );
 
 const scrollToBottom = () => {
   chatContainer.value.scrollTop = chatContainer.value.scrollHeight;

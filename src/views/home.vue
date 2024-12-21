@@ -1,7 +1,7 @@
 <template>
   <div class="bg-[#111016] h-dvh">
 
-    <div class="h-[15%] flex flex-row-reverse justify-between px-8 items-center">
+    <div dir="rtl"class="h-[15%] flex justify-between px-8 items-center">
         <div class="flex flex-row-reverse gap-4 items-center">
             <Menu as="div" class="relative inline-block text-left">
                 <MenuButton
@@ -25,7 +25,7 @@
                   leave-to-class="transform scale-95 opacity-0"
                 >
                   <MenuItems
-                    class="absolute top-12 end-0 border w-[130px] text-left border-gray-600 px-4 font-semibold py-2 text-sm flex flex-col gap-3 text-white bg-[#1b1922] rounded-lg z-50"
+                    class="absolute top-12 -start-14 border w-[130px] text-left border-gray-600 px-4 font-semibold py-2 text-sm flex flex-col gap-3 text-white bg-[#1b1922] rounded-lg z-50"
                   >
                       <MenuItem v-slot="{ active }">
                         <button class="text-left">Setting</button>

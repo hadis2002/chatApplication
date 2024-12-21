@@ -79,10 +79,10 @@
           class="flex"
           :class="{
             'justify-start':
-              (message.sender?.uid || message.sender) ==
+              (message.sender?.uid || message?.sender) ==
               authStore.userLoginInfo.uid,
             'justify-end':
-              (message.sender?.uid || message.sender) !=
+              (message.sender?.uid || message?.sender) !=
               authStore.userLoginInfo.uid,
           }"
         >
@@ -90,23 +90,23 @@
             class="flex items-start gap-2 p-3 w-fit"
             :class="{
               'flex-row':
-                (message.sender?.uid || message.sender) ==
+                (message.sender?.uid || message?.sender) ==
                 authStore.userLoginInfo.uid,
               'flex-row-reverse':
-                (message.sender?.uid || message.sender) !=
+                (message.sender?.uid || message?.sender) !=
                 authStore.userLoginInfo.uid,
             }"
           >
             <img
               :src="
-                (message.sender?.uid || message.sender) ==
+                (message.sender?.uid || message?.sender) ==
                 authStore.userLoginInfo.uid
                   ? ''
                   : userData.avatar || defaultProfile
               "
               class="w-10 h-10 rounded-full"
               :class="
-                (message.sender?.uid || message.sender) ==
+                (message.sender?.uid || message?.sender) ==
                 authStore.userLoginInfo.uid
                   ? 'hidden'
                   : ''
@@ -116,10 +116,10 @@
               class="p-3 rounded-lg max-w-xs"
               :class="{
                 'bg-blue-500 text-white':
-                  (message.sender?.uid || message.sender) ==
+                  (message.sender?.uid || message?.sender) ==
                   authStore.userLoginInfo.uid,
                 'bg-purple-500 text-white':
-                  (message.sender?.uid || message.sender) !=
+                  (message.sender?.uid || message?.sender) !=
                   authStore.userLoginInfo.uid,
               }"
             >
@@ -228,13 +228,14 @@ const validMessages = computed(() => {
 
 const fetch_user_messages = () => {
   axiosConfig
-    .get(`users/${route.params.userId}/messages`)
+    .get(`users/${route.params.userId}/messages?limit=1000`)
     .then((res) => {
+      console.log(res.data.data);
+      
       const currentUserId = authStore.userLoginInfo.uid;
       const targetUserId = route.params.userId;
-
-      // فیلتر پیام‌های مربوط به کاربر جاری
       messages.value = res.data.data.reduce((filteredMessages, message) => {
+        
         if (message.sender === "app_system") {
           message.sender = currentUserId;
         }
@@ -246,6 +247,10 @@ const fetch_user_messages = () => {
         ) {
           filteredMessages.push(message);
         }
+
+        console.log(message.sender, "message.sender");
+console.log(authStore.userLoginInfo.uid, "current user id");
+
         return filteredMessages;
       }, []);
 
@@ -257,65 +262,26 @@ const fetch_user_messages = () => {
     });
 };
 
-// اتصال به WebSocket
-const socket = new WebSocket("wss://echo.websocket.org");
 
-// وقتی اتصال برقرار می‌شود
-socket.onopen = () => {
-  console.log("Connected to WebSocket server");
-};
-
-// وقتی پیام جدید از سرور WebSocket دریافت می‌شود
-socket.onmessage = (event) => {
-  console.log("Received message from WebSocket:", event.data);
-
-  // تبدیل پیام دریافتی (فرض می‌کنیم JSON است)
-  const newMessage = JSON.parse(event.data);
-
-  // اضافه کردن پیام جدید به لیست پیام‌ها
-  messages.value.push(newMessage);
-
-  setTimeout(scrollToBottom, 100); // اسکرول به پایی/ن
-};
-
-// ارسال پیام از طریق WebSocket
-const send_message_via_socket = (message) => {
-  const messageData = { ...message, timestamp: new Date().toISOString() }; // افزودن زمان پیام
-  socket.send(JSON.stringify(messageData)); // ارسال پیام به WebSocket
-  console.log("Sent message via WebSocket:", messageData);
-
-  // اضافه کردن پیام به لیست پیام‌ها فوراً برای نمایش
-  messages.value.push(messageData);
-  setTimeout(scrollToBottom, 100); // اسکرول به پایین
-};
-
-// ارسال پیام (هم API و هم WebSocket)
 const append_message = () => {
   const newMessage = { ...messageForm.value };
-
-  // ارسال پیام به API
+  messages.value.push(newMessage)
   send_message(newMessage);
-
-  // ارسال پیام به WebSocket
-  send_message_via_socket(newMessage);
-
-  // پاک کردن فرم
-  messageForm.value.data.text = "";
+  // messageForm.value.data.text = "";
 };
 
-// ارسال پیام به API
 const send_message = (newMessage) => {
   axiosConfig
     .post("messages", newMessage)
     .then((res) => {
       res.data.data.sender = authStore.userLoginInfo.uid;
+      scrollToBottom()
       console.log(res.data.data, "message sent");
     })
     .catch((error) => {
       console.log(error);
     });
 };
-
 
 const scrollToBottom = () => {
   chatContainer.value.scrollTop = chatContainer.value.scrollHeight;

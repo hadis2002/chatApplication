@@ -208,7 +208,6 @@ const messageForm = ref({
   data: {
     text: '',
   },
-  sender: authStore.userLoginInfo.uid,
 });
 const fetch_user_data = () => {
   axiosConfig
@@ -227,27 +226,44 @@ const validMessages = computed(() => {
 });
 
 const fetch_user_messages = async () => {
-  let allMessages = [], page = 1;
+  let allMessages = [];
+  let page = 1;
 
   try {
     while (true) {
-      // دریافت پیام‌ها برای کاربر خاص (شناسه کاربری از `route.params.userId`)
-      const { data, meta } = await axiosConfig.get(
-        `users/${route.params.userId}/messages`,
-        { params: { limit: 100, page } }
-      ).then(res => res.data);
+      const { data, meta } = await axiosConfig
+        .get(`users/${route.params.userId}/messages`, {
+          params: { limit: 100, page },
+        })
+        .then((res) => res.data);
 
       allMessages.push(...data);
+
       if (page++ >= meta.pagination.total_pages) break;
     }
-    // مرتب‌سازی پیام‌ها بر اساس sentAt (برای ترتیب زمانی)
-    allMessages.sort((a, b) => a.sentAt - b.sentAt);
+
+    // فیلتر کردن پیام‌ها برای اطمینان از صحت گیرنده و فرستنده
+    const filteredMessages = allMessages.filter(
+  (msg) =>
+    (msg.sender == 'app_system' && msg.receiver == route.params.userId) ||
+    (msg.sender == route.params.userId && msg.receiver == 'app_system') ||
+    (msg.sender == route.params.userId && msg.receiver == authStore.userLoginInfo.uid) ||
+    (msg.sender == authStore.userLoginInfo.uid && msg.receiver == route.params.userId)
+);
+
+    // مرتب‌سازی پیام‌ها
+    // filteredMessages.sort((a, b) => a.sentAt - b.sentAt);
+
     messages.value = allMessages;
-    setTimeout(scrollToBottom, 100); // اسکرول به پایین پس از بارگذاری پیام‌ها
+
+    console.log("Messages fetched and filtered:", messages.value);
+
+    setTimeout(scrollToBottom, 100); // اسکرول به پایین
   } catch (error) {
     console.error("Error fetching messages:", error);
   }
 };
+
 
 
 
@@ -290,9 +306,8 @@ const fetch_user_messages = async () => {
 
 const append_message = () => {
   const newMessage = {
-    receiver: messageForm.value.receiver,
+    receiver: route.params.userId,
     receiverType: messageForm.value.receiverType,
-    sender: messageForm.value.sender,
     data: {
       text: messageForm.value.data.text,
     },
@@ -309,9 +324,8 @@ const send_message = (newMessage) => {
   axiosConfig
     .post("/messages", newMessage)
     .then((res) => {
-      res.data.data.sender = authStore.userLoginInfo.uid; // تعیین فرستنده پیام
       messages.value.push(res.data.data); // اضافه کردن پیام به لیست پیام‌ها
-      messages.value.sort((a, b) => a.sentAt - b.sentAt); // مرتب‌سازی پیام‌ها بر اساس زمان ارسال
+      // messages.value.sort((a, b) => a.sentAt - b.sentAt); // مرتب‌سازی پیام‌ها بر اساس زمان ارسال
       scrollToBottom(); // اسکرول به پایین پس از ارسال پیام
       console.log(res.data.data, "message sent");
     })

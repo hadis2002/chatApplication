@@ -68,13 +68,13 @@
     </div>
     <div ref="chatContainer" class="h-[80%] scroll-smooth overflow-auto">
       <div
-        v-if="validMessages.length === 0"
+        v-if="messages.length === 0"
         class="h-full flex flex-col gap-3 justify-center items-center"
       >
         <img class="w-[50%]" src="../../public/images/empty-chat.png" alt="" />
         <p class="text-white text-lg opacity-60">گفت و گو را آغاز کنید.</p>
       </div>
-      <div v-else v-for="message in validMessages" :key="message.id">
+      <div v-else v-for="message in messages" :key="message.id">
         <div
           class="flex"
           :class="{
@@ -209,6 +209,7 @@ const messageForm = ref({
     text: '',
   },
 });
+
 const fetch_user_data = () => {
   axiosConfig
     .get(`users/${route.params.userId}`)
@@ -225,97 +226,31 @@ const validMessages = computed(() => {
   return messages.value.filter((message) => message.data && message.data.text);
 });
 
-const fetch_user_messages = async () => {
-  let allMessages = [];
-  let page = 1;
 
-  try {
-    while (true) {
-      const { data, meta } = await axiosConfig
-        .get(`users/${route.params.userId}/messages`, {
-          params: { limit: 100, page },
-        })
-        .then((res) => res.data);
-
-      allMessages.push(...data);
-
-      if (page++ >= meta.pagination.total_pages) break;
-    }
-
-    // فیلتر کردن پیام‌ها برای اطمینان از صحت گیرنده و فرستنده
-    const filteredMessages = allMessages.filter(
-  (msg) =>
-    (msg.sender == 'app_system' && msg.receiver == route.params.userId) ||
-    (msg.sender == route.params.userId && msg.receiver == 'app_system') ||
-    (msg.sender == route.params.userId && msg.receiver == authStore.userLoginInfo.uid) ||
-    (msg.sender == authStore.userLoginInfo.uid && msg.receiver == route.params.userId)
-);
-
-    // مرتب‌سازی پیام‌ها
-    // filteredMessages.sort((a, b) => a.sentAt - b.sentAt);
-
-    messages.value = allMessages;
-
-    console.log("Messages fetched and filtered:", messages.value);
-
-    setTimeout(scrollToBottom, 100); // اسکرول به پایین
-  } catch (error) {
-    console.error("Error fetching messages:", error);
-  }
+const fetch_user_messages = () => {                                       
+  axiosConfig
+    .get(`users/${route.params.userId}/messages`)
+    .then((res) => {
+      messages.value = res.data.data
+      setTimeout(scrollToBottom, 100);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
 };
-
-
-
-
-
-// const fetch_user_messages = () => {
-//   axiosConfig
-//     .get(`users/${route.params.userId}/messages?limit=1000`)
-//     .then((res) => {
-//       console.log(res.data.data);
-      
-// //       const currentUserId = authStore.userLoginInfo.uid;
-// //       const targetUserId = route.params.userId;
-// //       messages.value = res.data.data.reduce((filteredMessages, message) => {
-        
-// //         if (message.sender === "app_system") {
-// //           message.sender = currentUserId;
-// //         }
-// //         if (
-// //           (message.senderId === currentUserId &&
-// //             message.receiverID === targetUserId) ||
-// //           (message.senderId === targetUserId &&
-// //             message.receiverID === currentUserId)
-// //         ) {
-// //           filteredMessages.push(message);
-// //         }
-
-// //         console.log(message.sender, "message.sender");
-// // console.log(authStore.userLoginInfo.uid, "current user id");
-
-// //         return filteredMessages;
-// //       }, []);
-//       messages.value = res.data.data
-//       console.log(messages.value, "user messages");
-//       setTimeout(scrollToBottom, 100);
-//     })
-//     .catch((error) => {
-//       console.log(error);
-//     });
-// };
 
 const append_message = () => {
   const newMessage = {
-    receiver: route.params.userId,
+    receiver: messageForm.value.receiver,
     receiverType: messageForm.value.receiverType,
     data: {
       text: messageForm.value.data.text,
     },
-    sentAt: Date.now(), // اضافه کردن زمان ارسال پیام
+    sentAt: Date.now(),
   };
-  messages.value.push(newMessage); // افزودن پیام جدید به لیست پیام‌ها
-  send_message(newMessage); // ارسال پیام به سرور
-  messageForm.value.data.text = ""; // پاک کردن متن پیام پس از ارسال
+  messages.value.push(newMessage);
+  send_message(newMessage);
+  messageForm.value.data.text = "";
 };
 
 
@@ -324,9 +259,8 @@ const send_message = (newMessage) => {
   axiosConfig
     .post("/messages", newMessage)
     .then((res) => {
-      messages.value.push(res.data.data); // اضافه کردن پیام به لیست پیام‌ها
-      // messages.value.sort((a, b) => a.sentAt - b.sentAt); // مرتب‌سازی پیام‌ها بر اساس زمان ارسال
-      scrollToBottom(); // اسکرول به پایین پس از ارسال پیام
+      messages.value.push(res.data.data);
+      scrollToBottom();
       console.log(res.data.data, "message sent");
     })
     .catch((error) => {

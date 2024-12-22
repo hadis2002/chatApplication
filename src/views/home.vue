@@ -121,8 +121,8 @@ const fetch_users = () => {
   axiosConfig
     .get("users")
     .then((res) => {
-      // users.value = res.data.data
-      users.value = res.data.data.filter( user => user.uid !== authStore.userLoginInfo.uid )
+      users.value = res.data.data
+      // users.value = res.data.data.filter( user => user.uid !== authStore.userLoginInfo.uid )
     })
     .catch((error) => {
       console.log(error, "error");

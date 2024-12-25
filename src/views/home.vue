@@ -88,9 +88,8 @@
 
         <TabPanels class="h-[92%] w-full pt-5 overflow-auto">
           <TabPanel class="h-full overflow-auto px-5">
-            <div v-for="item in filteredResults" :key="item.id">
-              <usersList v-if="item.type === 'user'" :user="item" />
-              <groupsList v-if="item.type === 'group'" :group="item" />
+            <div v-for="conversation in conversationsList" :key="conversation.id">
+              <conversations :conversation="conversation" :users="users" />
             </div>
           </TabPanel>
           <TabPanel class="h-full overflow-auto px-5"></TabPanel>
@@ -105,51 +104,40 @@
 import { ref, computed, onMounted } from "vue";
 import axiosConfig from "../../src/axiosConfig";
 import { TabGroup, TabList, Tab, TabPanels, TabPanel } from "@headlessui/vue";
-import usersList from "../components/usersList.vue";
-import groupsList from "../components/groupsList.vue";
+import conversations from "../components/conversations.vue";
 import { CometChat } from "@cometchat-pro/chat";
 import { useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 import { useAuthStore } from "../stores/authStore";
 const router = useRouter();
+const route = useRoute()
 const authStore = useAuthStore();
-const users = ref([]);
-const groups = ref([]);
+const conversationsList = ref([]);
 const searchQuery = ref("");
 const currentTab = ref("all");
+const users = ref([])
+const fetch_conversations = () => {
+  axiosConfig
+    .get("conversations")
+    .then((res) => {      
+      conversationsList.value = res.data.data.filter(item=>item.conversationId.includes(authStore.userLoginInfo.uid))
+    })
+    .catch((error) => {
+      console.log(error, "error");
+    });
+};
+
 const fetch_users = () => {
   axiosConfig
-    .get("users")
-    .then((res) => {
+  .get("users")
+    .then((res) => {      
       users.value = res.data.data
-      // users.value = res.data.data.filter( user => user.uid !== authStore.userLoginInfo.uid )
     })
     .catch((error) => {
       console.log(error, "error");
     });
-};
-const fetch_groups = () => {
-  axiosConfig
-    .get("groups")
-    .then((res) => {
-      groups.value = res.data.data;
-    })
-    .catch((error) => {
-      console.log(error, "error");
-    });
-};
-const filteredResults = computed(() => {
-    const combinedData = [
-      ...users.value.map((user) => ({ ...user, type: "user" })),
-      ...groups.value.map((group) => ({ ...group, type: "group" })),
-    ];
-    return searchQuery.value
-      ? combinedData.filter((item) =>
-          item.name.toLowerCase().includes(searchQuery.value)
-        )
-      : combinedData;
-});
-
+}
 const logout = () => {
   authStore.removeLoginInfo();
   localStorage.removeItem("userLoginInfo");
@@ -160,8 +148,8 @@ const go_profile_page = () => {
   router.push({ name: "profile" });
 };
 onMounted(() => {
-  fetch_groups();
-  fetch_users();
+  fetch_conversations();
+  fetch_users()
 });
 </script>
 

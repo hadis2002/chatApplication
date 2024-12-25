@@ -210,72 +210,71 @@ const messageForm = ref({
   },
 });
 
-const fetch_user_data = () => {
+// const fetch_user_data = () => {
+//   axiosConfig
+//     .get(`users/${route.params.userId}`)
+//     .then((res) => {
+//       userData.value = res.data.data;
+//       console.log(userData, "user data");
+//     })
+//     .catch((error) => {
+//       console.log(error);
+//     });
+// };
+
+// const validMessages = computed(() => {
+//   return messages.value.filter((message) => message.data && message.data.text);
+// });
+
+const fetch_user_conversation = () => {                                    
   axiosConfig
-    .get(`users/${route.params.userId}`)
-    .then((res) => {
-      userData.value = res.data.data;
-      console.log(userData, "user data");
-    })
-    .catch((error) => {
-      console.log(error);
-    });
-};
-
-const validMessages = computed(() => {
-  return messages.value.filter((message) => message.data && message.data.text);
-});
-
-
-const fetch_user_messages = () => {                                       
-  axiosConfig
-    .get(`users/${route.params.userId}/messages`)
+    .get(`conversations/${route.params.conversationId}`)
     .then((res) => {
       messages.value = res.data.data
-      setTimeout(scrollToBottom, 100);
+      // setTimeout(scrollToBottom, 100);
     })
     .catch((error) => {
       console.log(error);
     });
 };
 
-const append_message = () => {
-  const newMessage = {
-    receiver: messageForm.value.receiver,
-    receiverType: messageForm.value.receiverType,
-    data: {
-      text: messageForm.value.data.text,
-    },
-    sentAt: Date.now(),
-  };
-  messages.value.push(newMessage);
-  send_message(newMessage);
-  messageForm.value.data.text = "";
-};
+// const append_message = () => {
+//   const newMessage = {
+//     receiver: messageForm.value.receiver,
+//     receiverType: messageForm.value.receiverType,
+//     data: {
+//       text: messageForm.value.data.text,
+//     },
+//     sentAt: Date.now(),
+//   };
+//   messages.value.push(newMessage);
+//   send_message(newMessage);
+//   messageForm.value.data.text = "";
+// };
 
 
 
-const send_message = (newMessage) => {
-  axiosConfig
-    .post("/messages", newMessage)
-    .then((res) => {
-      messages.value.push(res.data.data);
-      scrollToBottom();
-      console.log(res.data.data, "message sent");
-    })
-    .catch((error) => {
-      console.log(error);
-    });
-};
+// const send_message = (newMessage) => {
+//   axiosConfig
+//     .post("/messages", newMessage)
+//     .then((res) => {
+//       messages.value.push(res.data.data);
+//       scrollToBottom();
+//       console.log(res.data.data, "message sent");
+//     })
+//     .catch((error) => {
+//       console.log(error);
+//     });
+// };
 
 
-const scrollToBottom = () => {
-  chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
-};
+// const scrollToBottom = () => {
+//   chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
+// };
 
 onMounted(() => {
-  fetch_user_data();
-  fetch_user_messages();
+  // fetch_user_data();
+  fetch_user_conversation();
 });
 </script>
 

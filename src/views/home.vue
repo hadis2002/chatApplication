@@ -86,9 +86,13 @@
           </Tab>
         </TabList>
 
-        <TabPanels class="h-[92%] w-full pt-5 overflow-auto">
-          <TabPanel class="h-full overflow-auto px-5">
-            <div v-for="conversation in conversationsList" :key="conversation.id">
+        <TabPanels class="h-[92%] w-full overflow-auto">
+          <TabPanel class="h-full overflow-auto pt-5">
+            <div v-if="!conversationsList.length" class="flex flex-col h-full justify-center items-center gap-3">
+                <img src="../../public/images/empty-chat.png" class="w-[50%]"alt="">
+                <p class="text-white">گفت و گو را آغاز کنید</p>
+            </div>
+            <div v-else v-for="conversation in conversationsList" :key="conversation.id">
               <conversations :conversation="conversation" :users="users" />
             </div>
           </TabPanel>
@@ -121,7 +125,7 @@ const fetch_conversations = () => {
   axiosConfig
     .get("conversations")
     .then((res) => {      
-      conversationsList.value = res.data.data.filter(item=>item.conversationId.includes(authStore.userLoginInfo.uid))
+      conversationsList.value = res.data.data.filter(item=>item.conversationId.includes(authStore.userLoginInfo.uid) && item.conversationWith?.uid !== 'app_system' && item.conversationWith.uid !== authStore.userLoginInfo.uid)
     })
     .catch((error) => {
       console.log(error, "error");

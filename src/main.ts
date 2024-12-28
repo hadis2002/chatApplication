@@ -10,7 +10,7 @@ let region = "eu";
 let appSetting = new CometChat.AppSettingsBuilder()
   .subscribePresenceForAllUsers()
   .setRegion(region)
-  .autoEstablishSocketConnection(false)
+  .autoEstablishSocketConnection(true)
   .build()
 CometChat.init(appID, appSetting).then(
   () => {

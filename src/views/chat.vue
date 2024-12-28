@@ -68,21 +68,21 @@
     </div>
     <div ref="chatContainer" class="h-[80%] scroll-smooth overflow-auto">
       <div
-        v-if="messages.length === 0"
+        v-if="!validMessages.length"
         class="h-full flex flex-col gap-3 justify-center items-center"
       >
         <img class="w-[50%]" src="../../public/images/empty-chat.png" alt="" />
         <p class="text-white text-lg opacity-60">گفت و گو را آغاز کنید.</p>
       </div>
-      <div v-else v-for="message in messages" :key="message.id">
+      <div v-else v-for="message in validMessages" :key="message.id">
         <div
           class="flex"
           :class="{
             'justify-start':
-              (message.sender?.uid || message.sender) ==
+              (message?.lastMessage?.sender) ==
               authStore.userLoginInfo.uid,
             'justify-end':
-              (message.sender?.uid || message.sender) !=
+              (message?.lastMessage?.sender) !=
               authStore.userLoginInfo.uid,
           }"
         >
@@ -90,23 +90,23 @@
             class="flex items-start gap-2 p-3 w-fit"
             :class="{
               'flex-row':
-                (message.sender?.uid || message.sender) ==
+                (message?.lastMessage?.sender) ==
                 authStore.userLoginInfo.uid,
               'flex-row-reverse':
-                (message.sender?.uid || message.sender) !=
+                (message?.lastMessage?.sender) !=
                 authStore.userLoginInfo.uid,
             }"
           >
             <img
               :src="
-                (message.sender?.uid || message.senderId) ==
+                (message?.lastMessage?.sender) ==
                 authStore.userLoginInfo.uid
                   ? ''
                   : userData.avatar || defaultProfile
               "
               class="w-10 h-10 rounded-full"
               :class="
-                (message.sender?.uid || message.sender) ==
+                (message?.lastMessage?.sender) ==
                 authStore.userLoginInfo.uid
                   ? 'hidden'
                   : ''
@@ -116,14 +116,14 @@
               class="p-3 rounded-lg max-w-xs"
               :class="{
                 'bg-blue-500 text-white':
-                  (message.sender?.uid || message.sender) ==
+                  (message?.lastMessage?.sender) ==
                   authStore.userLoginInfo.uid,
                 'bg-purple-500 text-white':
-                  (message.sender?.uid || message.sender) !=
+                  (message?.lastMessage?.sender) !=
                   authStore.userLoginInfo.uid,
               }"
             >
-              <p>{{ message.data.text }}</p>
+              <p>{{ message?.data.text }}</p>
             </div>
           </div>
         </div>
@@ -202,36 +202,52 @@ const authStore = useAuthStore();
 const chatContainer = ref(null);
 let messages = ref([]);
 const userData = ref([]);
+let userId;
 const messageForm = ref({
-  receiver: route.params.userId,
+  receiver: 'cometchat-uid-5',
+  sender: authStore.userLoginInfo.uid,
   receiverType: "user",
   data: {
     text: '',
   },
 });
 
-// const fetch_user_data = () => {
-//   axiosConfig
-//     .get(`users/${route.params.userId}`)
-//     .then((res) => {
-//       userData.value = res.data.data;
-//       console.log(userData, "user data");
-//     })
-//     .catch((error) => {
-//       console.log(error);
-//     });
-// };
+const fetch_user_data = () => {
+let splitConversationId = route.params.conversationId.split('_');
+userId = splitConversationId[0];
+if(userId == authStore.userLoginInfo.uid){
+    userId = splitConversationId[2]
+}
+  axiosConfig
+    .get(`users/${userId}`)
+    .then((res) => {
+      userData.value = res.data.data;
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+};
 
-// const validMessages = computed(() => {
-//   return messages.value.filter((message) => message.data && message.data.text);
-// });
+const validMessages = computed(() => {
+  return messages.value.filter((message) => message.data && message.data.text);
+});
 
 const fetch_user_conversation = () => {                                    
   axiosConfig
     .get(`conversations/${route.params.conversationId}`)
     .then((res) => {
       messages.value = res.data.data
-      // setTimeout(scrollToBottom, 100);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+};
+
+const fetch_messages = () => {                                    
+  axiosConfig
+    .get(`users/${userId}/messages`)
+    .then((res) => {
+        messages.value = res.data.data
     })
     .catch((error) => {
       console.log(error);
@@ -239,18 +255,99 @@ const fetch_user_conversation = () => {
 };
 
 // const append_message = () => {
-//   const newMessage = {
-//     receiver: messageForm.value.receiver,
-//     receiverType: messageForm.value.receiverType,
-//     data: {
-//       text: messageForm.value.data.text,
+//   let receiverID = "cometchat-uid-5";
+//   let messageText = messageForm.value.data.text;
+//   let receiverType = 'user';
+//   let textMessage = new CometChat.TextMessage(
+//     receiverID,
+//     messageText,
+//     receiverType
+//   );
+
+//   CometChat.sendMessage(textMessage).then(
+//     (message) => {
+//       console.log("Message sent successfully:", message);
+//       // const formattedMessage = {
+//       //   ...message,
+//       //   lastMessage: {
+//       //     ...message,
+//       //     data: {
+//       //       text: message.text,
+//       //     },
+//       //   },
+//       // };
+//       messages.value.push(message);
 //     },
-//     sentAt: Date.now(),
-//   };
-//   messages.value.push(newMessage);
-//   send_message(newMessage);
-//   messageForm.value.data.text = "";
+//     (error) => {
+//       console.log("Message sending failed with error:", error);
+//     }
+//   );
+//   // const newMessage = {
+//   //   receiver: messageForm.value.receiver,
+//   //   sender: messageForm.value.sender,
+//   //   receiverType: messageForm.value.receiverType,
+//   //   data: {
+//   //     text: messageForm.value.data.text,
+//   //   },
+//   // };
+//   // console.log(messageForm.value , 'uuuuuuuu');
+  
+//   // messages.value.push(newMessage);
+//   // send_message(newMessage);
+//   fetch_user_messages()
+//   // messageForm.value.data.text = "";
 // };
+
+const append_message = () => {
+  let receiverID = userId;
+let messageText = messageForm.value.data.text;
+let receiverType = CometChat.RECEIVER_TYPE.USER;
+let textMessage = new CometChat.TextMessage(
+  receiverID,
+  messageText,
+  receiverType
+);
+
+CometChat.sendMessage(textMessage).then(
+  (message) => {
+    console.log("Message sent successfully:", message);
+    console.log(textMessage , '//////////');
+    messages.value.push(message)
+  },
+  (error) => {
+    console.log("Message sending failed with error:", error);
+  }
+);
+};
+
+
+
+const fetch_user_messages = () => {
+// تنظیم listener برای دریافت پیام‌ها
+CometChat.addMessageListener(
+    "uniqueListenerID",  // شناسه یونیک برای این listener
+    new CometChat.MessageListener({
+        // دریافت پیام‌های متنی
+        onTextMessageReceived: function(message) {
+            console.log("New text message received: ", message);
+            // اینجا می‌توانید پیام را پردازش کنید یا نمایش دهید
+        },
+        
+        // دریافت پیام‌های رسانه‌ای
+        onMediaMessageReceived: function(message) {
+            console.log("New media message received: ", message);
+            // اینجا می‌توانید پیام‌های رسانه‌ای را پردازش کنید
+        },
+
+        // دریافت پیام‌های تماس صوتی یا تصویری
+        onCustomMessageReceived: function(message) {
+            console.log("New custom message received: ", message);
+            // اینجا می‌توانید پیام‌های سفارشی را پردازش کنید
+        }
+    })
+);
+
+};
 
 
 
@@ -259,7 +356,7 @@ const fetch_user_conversation = () => {
 //     .post("/messages", newMessage)
 //     .then((res) => {
 //       messages.value.push(res.data.data);
-//       scrollToBottom();
+//       // scrollToBottom();
 //       console.log(res.data.data, "message sent");
 //     })
 //     .catch((error) => {
@@ -267,14 +364,15 @@ const fetch_user_conversation = () => {
 //     });
 // };
 
-
-// const scrollToBottom = () => {
-//   chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
-// };
+const scrollToBottom = () => {
+  chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
+};
 
 onMounted(() => {
-  // fetch_user_data();
+  fetch_user_data();
+  fetch_user_messages()
   fetch_user_conversation();
+  fetch_messages()
 });
 </script>
 

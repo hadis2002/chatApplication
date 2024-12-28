@@ -20,7 +20,7 @@
           </div>
           <input
             v-model="UID"
-            class="bg-transparent text-white ps-12 border-b border-gray-400 p-3 placeholder:text-sm"
+            class="bg-transparent text-white w-[100%] ps-12 border-b border-gray-400 p-3 placeholder:text-sm"
             type="text"
             placeholder="نام کاربری خود را وارد کنید."
           />

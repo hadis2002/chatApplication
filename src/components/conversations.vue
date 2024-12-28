@@ -2,7 +2,7 @@
   <div
     v-if="findedUser.name || findedUser.avatar"
     @click="go_chat_page(conversation)"
-    class="text-white p-3 flex items-center gap-4 hover:bg-blue-950 focus:bg-blue-950"
+    class="text-white py-3 px-7 flex items-center gap-4 hover:bg-blue-950 focus:bg-blue-950"
   >
     <div class="w-16 h-12 relative">
       <div
@@ -61,15 +61,10 @@ const props = defineProps({
   },
 });
 const go_chat_page = (conversation) => {
-  router.push({ name: "chat", params: { conversationId: conversation.uid } });
+  router.push({ name: "chat", params: { conversationId: conversation.conversationId } });
 };
 onMounted(() => {
   const uid = props.conversation.conversationWith?.uid;
-  const filteredUsers = props.users.filter(
-    (item) =>
-      item.uid !== "app_system" && item.uid !== authStore.userLoginInfo.uid
-  );
-  findedUser.value = filteredUsers.find((item) => item.uid == uid) || {};
-  console.log(findedUser.value);
+  findedUser.value = props.users.find((item) => item.uid == uid) || {};
 });
 </script>

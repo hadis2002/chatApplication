@@ -19,7 +19,7 @@
             </svg>
           </div>
           <input
-            v-model="UID"
+            v-model="userId"
             class="bg-transparent text-white w-[100%] ps-12 border-b border-gray-400 p-3 placeholder:text-sm"
             type="text"
             placeholder="نام کاربری خود را وارد کنید."
@@ -44,7 +44,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { CometChat } from "@cometchat-pro/chat";
 import { useRouter } from "vue-router";
 import axiosConfig from "../../src/axiosConfig";
@@ -52,21 +52,50 @@ import { useAuthStore } from "../stores/authStore";
 const router = useRouter();
 const authStore = useAuthStore();
 
-let UID = ref("");
+let userId = ref("");
+let UID = computed(() => userId.value);
+let authKey = "b1341fca8190cdb65b8ed64a4d0ca2f70949634f";
+// const submit_form = () => {
+//   axiosConfig
+//     .post(`users/${UID.value}/auth_tokens`)
+//     .then((res) => {
+//       const loginData = res.data.data;
+//       console.log("Login Successful:", loginData);
+//       authStore.setLoginInfo(loginData);
+//       localStorage.setItem("userLoginInfo", JSON.stringify(loginData));
+//       router.push({ name: "home" });
+//     })
+//     .catch((error) => {
+//       console.error("Login failed:", error);
+//     });
+// };
 
 const submit_form = () => {
-  axiosConfig
-    .post(`users/${UID.value}/auth_tokens`)
-    .then((res) => {
-      const loginData = res.data.data;
-      console.log("Login Successful:", loginData);
-      authStore.setLoginInfo(loginData);
-      localStorage.setItem("userLoginInfo", JSON.stringify(loginData));
-      router.push({ name: "home" });
-    })
-    .catch((error) => {
-      console.error("Login failed:", error);
-    });
+  CometChat.getLoggedinUser().then(
+    (user) => {
+      console.log("Logged in user:", user);
+      if (!user) {
+        CometChat.login(UID.value, authKey).then(
+          (user) => {
+            console.log("Login Successful:", { user });
+            const loginData = user;
+            console.log("Login Successful:", loginData);
+            authStore.setLoginInfo(loginData);
+            localStorage.setItem("userLoginInfo", JSON.stringify(loginData));
+            router.push({ name: "home" });
+          },
+          (error) => {
+            console.log("Login failed with exception:", { error });
+          }
+        );
+      } else {
+        console.log("User is already logged in");
+      }
+    },
+    (error) => {
+      console.log("Something went wrong", error);
+    }
+  );
 };
 </script>
 
@@ -76,7 +105,7 @@ const submit_form = () => {
   src: url("../../public/font/Poppins-Light.ttf");
 }
 body {
-  font-family: 'Poppins';
+  font-family: "Poppins";
 }
 .clip-wave {
   clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%);

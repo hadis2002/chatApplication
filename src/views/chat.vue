@@ -78,19 +78,15 @@
         <div
           class="flex"
           :class="{
-            'justify-start':
-              message.sender == authStore.userLoginInfo.uid,
-            'justify-end':
-              message.sender != authStore.userLoginInfo.uid,
+            'justify-start': message.sender == authStore.userLoginInfo.uid,
+            'justify-end': message.sender != authStore.userLoginInfo.uid,
           }"
         >
           <div
             class="flex items-start gap-2 p-3 w-fit"
             :class="{
-              'flex-row':
-                message.sender == authStore.userLoginInfo.uid,
-              'flex-row-reverse':
-                message.sender != authStore.userLoginInfo.uid,
+              'flex-row': message.sender == authStore.userLoginInfo.uid,
+              'flex-row-reverse': message.sender != authStore.userLoginInfo.uid,
             }"
           >
             <img
@@ -101,9 +97,7 @@
               "
               class="w-10 h-10 rounded-full"
               :class="
-                message.sender == authStore.userLoginInfo.uid
-                  ? 'hidden'
-                  : ''
+                message.sender == authStore.userLoginInfo.uid ? 'hidden' : ''
               "
             />
             <div
@@ -194,11 +188,9 @@ const authStore = useAuthStore();
 const chatContainer = ref(null);
 let messages = ref([]);
 const userData = ref([]);
-let userId = route.params.conversationId.split("_")[0];
-
 const messageForm = ref({
   sender: authStore.userLoginInfo.uid,
-  receiverId: userId,
+  receiverId: "",
   receiverType: "",
   data: {
     text: "",
@@ -206,11 +198,8 @@ const messageForm = ref({
 });
 
 const fetch_user_data = () => {
-  if (userId == authStore.userLoginInfo.uid) {
-    userId = route.params.conversationId.split("_")[2]
-  }
   axiosConfig
-    .get(`users/${userId}`)
+    .get(`users/${messageForm.value.receiverId}`)
     .then((res) => {
       userData.value = res.data.data;
     })
@@ -223,25 +212,26 @@ const validMessages = computed(() => {
   return messages.value.filter((message) => message.data && message.data.text);
 });
 
-const fetch_user_conversation = () => {
-  axiosConfig
-    .get(`conversations/${route.params.conversationId}`)
-    .then((res) => {
-      messages.value = res.data.data;
-    })
-    .catch((error) => {
-      console.log(error);
-    });
+const fetch_user_conversation = async () => {
+  try {
+    const res = await axiosConfig.get(
+      `conversations/${route.params.conversationId}`
+    );
+    const arrUID = res.data.data[0].conversationId.split("_user_");
+    messageForm.value.receiverId =
+      arrUID[0] == authStore.userLoginInfo.uid ? arrUID[1] : arrUID[0];
+    messages.value = res.data.data;
+  } catch (err) {}
 };
 
 const fetch_messages = () => {
   axiosConfig
-    .get(`users/${userId}/messages`)
+    .get(`users/${messageForm.value.receiverId}/messages`)
     .then((res) => {
       messages.value = res.data.data.filter((message) => {
-        return message.conversationId == route.params.conversationId
-      })
-      console.log(messages.value , 'all messages');
+        return message.conversationId == route.params.conversationId;
+      });
+      console.log(messages.value, "all messages");
       setTimeout(() => {
         scrollToBottom();
       }, 200);
@@ -262,7 +252,8 @@ const append_message = () => {
   );
   CometChat.sendMessage(textMessage).then(
     (textMessage) => {
-      console.log("message sent successfully" , textMessage);
+      textMessage.sender = authStore.userLoginInfo.uid;
+      console.log("message sent successfully", textMessage.receiver);
       messages.value.push(textMessage);
       setTimeout(() => {
         scrollToBottom();
@@ -275,7 +266,6 @@ const append_message = () => {
   );
 };
 
-
 const fetch_message_listener = () => {
   let listenerID = "UNIQUE_LISTENER_ID";
   CometChat.addMessageListener(
@@ -285,8 +275,8 @@ const fetch_message_listener = () => {
         console.log("New message received:", textMessage);
         messages.value.push(textMessage);
         setTimeout(() => {
-        scrollToBottom();
-      }, 50);
+          scrollToBottom();
+        }, 50);
       },
     })
   );
@@ -309,10 +299,10 @@ const scrollToBottom = () => {
   chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
 };
 
-onMounted(() => {
+onMounted(async () => {
+  await fetch_user_conversation();
   fetch_user_data();
   fetch_message_listener();
-  fetch_user_conversation();
   fetch_messages();
 });
 </script>

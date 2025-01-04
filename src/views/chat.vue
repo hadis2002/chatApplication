@@ -50,11 +50,13 @@
           <div class="text-gray-400">{{ userData.name }}</div>
           <div
             :class="
-              userData.status == 'online' ? 'text-green-500' : 'text-gray-300'
+              userData.status == 'available'
+                ? 'text-green-500'
+                : 'text-gray-300'
             "
             class="text-xs"
           >
-            {{ userData.status }}
+            {{ userData.status == "available" ? "online" : "offline" }}
           </div>
         </div>
         <div>
@@ -156,21 +158,56 @@
           />
         </div>
       </div>
-      <div>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="gray"
-          width="24"
-          height="24"
-        >
-          <path
-            d="M12 3a4 4 0 0 0-4 4v5a4 4 0 0 0 8 0V7a4 4 0 0 0-4-4zm2 9a2 2 0 0 1-4 0V7a2 2 0 0 1 4 0v5z"
-          />
-          <path
-            d="M19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7H3c0 4.42 3.58 8 8 8s8-3.58 8-8h-2z"
-          />
-        </svg>
+      <div class="bg-pink-300 flex items-center left-4 right-4 absolute">
+        <div>
+          <div ref="containerRef"></div>
+        </div>
+        <p>{{ currentTime }}</p>
+        <button v-if="showAudioRecordButton" @click="startAudioRecordHandler">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M7 8C7 5.23858 9.23858 3 12 3C14.7614 3 17 5.23858 17 8V11C17 13.7614 14.7614 16 12 16C9.23858 16 7 13.7614 7 11V8Z"
+              stroke="#1C274C"
+              stroke-width="1.5"
+            />
+            <path
+              d="M13 8L17 8"
+              stroke="#1C274C"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+            <path
+              d="M13 11L17 11"
+              stroke="#1C274C"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+            <path
+              d="M20 10V11C20 15.4183 16.4183 19 12 19C7.58172 19 4 15.4183 4 11V10"
+              stroke="#1C274C"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+            <path
+              d="M12 19V22"
+              stroke="#1C274C"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+          </svg>
+        </button>
+        <div v-else>
+          <button @click="pauseRecording">
+            {{ isPauseResume ? "pause" : "resume" }}
+          </button>
+          <button @click="stopHandler">Stop</button>
+        </div>
       </div>
     </div>
   </div>
@@ -183,6 +220,11 @@ import { useAuthStore } from "../stores/authStore";
 import defaultProfile from "../../public/images/default-avatar.avif";
 import { onMounted, ref, computed } from "vue";
 import { useRoute } from "vue-router";
+
+import { useWaveSurferRecorder } from "@meersagor/wavesurfer-vue";
+const showAudioRecordButton = ref<boolean>(true);
+const containerRef = ref<HTMLDivElement | null>(null);
+
 const route = useRoute();
 const authStore = useAuthStore();
 const chatContainer = ref(null);
@@ -259,6 +301,7 @@ const append_message = () => {
         scrollToBottom();
       }, 200);
       messageForm.value.data.text = "";
+      // stopTyping()
     },
     (error) => {
       console.error("Message sending failed", error);
@@ -282,6 +325,44 @@ const fetch_message_listener = () => {
   );
 };
 
+// const is_typing_user = () => {
+//   let receiverId = messageForm.value.receiverId;
+//   let receiverType = CometChat.RECEIVER_TYPE.USER;
+//   let typingNotification = new CometChat.TypingIndicator(
+//     receiverId,
+//     receiverType
+//   );
+//   CometChat.startTyping(typingNotification);
+//   let listenerId = "is_typing_listener";
+//   CometChat.addMessageListener(
+//     listenerId,
+//     new CometChat.MessageListener({
+//       onTypingStarted: (typingIndicator) => {
+//         typingIndicator.sender = authStore.userLoginInfo.uid
+//         typingIndicator.receiverId = messageForm.value.receiverId
+//         console.log("Typing started :", typingIndicator , receiverId);
+//         // if (typingIndicator.receiverId === receiverId) {
+//         // }
+//       },
+//       onTypingEnded: (typingIndicator) => {
+//         console.log("Typing ended :", typingIndicator);
+//         // if (typingIndicator.receiverId === receiverId) {
+//         // }
+//       },
+//     })
+//   );
+// };
+
+// const stopTyping = () => {
+//   let receiverId = messageForm.value.receiverId;
+//   let receiverType = CometChat.RECEIVER_TYPE.USER;
+//   let typingNotification = new CometChat.TypingIndicator(
+//     receiverId,
+//     receiverType
+//   );
+//   CometChat.endTyping(typingNotification);
+// };
+
 // const send_message = (newMessage) => {
 //   axiosConfig
 //     .post("/messages", newMessage)
@@ -297,6 +378,42 @@ const fetch_message_listener = () => {
 
 const scrollToBottom = () => {
   chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
+};
+
+const options = computed(() => ({
+  height: 48,
+  waveColor: "#66667D",
+  progressColor: "#6A24FF",
+  barGap: 5,
+  barWidth: 5,
+  barRadius: 8,
+  cursorWidth: 0,
+  url: "https://revews-bucket.s3.ap-southeast-1.amazonaws.com/a06mmMU3sgnzuUkH4OiHvyuUgCFdLSnJaDLBao7y.webm",
+}));
+
+const {
+  pauseRecording,
+  startRecording,
+  stopRecording,
+  currentTime,
+  isPauseResume,
+} = useWaveSurferRecorder({
+  containerRef,
+  options: options.value,
+  recordPluginOptions: {
+    continuousWaveform: true,
+  },
+});
+
+const startAudioRecordHandler = () => {
+  startRecording();
+  showAudioRecordButton.value = false;
+};
+
+const stopHandler = async () => {
+  const blob = await stopRecording();
+  console.log("blob =====", blob);
+  showAudioRecordButton.value = true;
 };
 
 onMounted(async () => {

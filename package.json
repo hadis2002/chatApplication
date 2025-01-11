@@ -16,11 +16,12 @@
     "@vitejs/plugin-basic-ssl": "^1.2.0",
     "@vueuse/core": "^11.3.0",
     "axios": "^1.7.7",
+    "lamejs": "^1.2.1",
     "node-fetch": "^2.7.0",
     "pinia": "^2.2.6",
     "socket.io-client": "^4.8.1",
     "vue-router": "^4.4.5",
-    "wavesurfer.js": "^7.8.15"
+    "vue3-wave-audio-player": "^2.0.3"
   },
   "devDependencies": {
     "@types/vue": "^2.0.0",

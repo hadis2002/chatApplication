@@ -117,7 +117,7 @@
         </div>
       </div>
     </div>
-    <div class="bg-[#21242b] flex items-center justify-between px-5 h-[10%]">
+    <div class="bg-[#21242b] bg-pink-200 absolute left-0 right-0 bottom-12 flex items-center justify-between px-5 h-[10%]">
       <div class="flex items-center gap-2">
         <div @click="append_message">
           <svg
@@ -158,57 +158,17 @@
           />
         </div>
       </div>
-      <div class="bg-pink-300 flex items-center left-4 right-4 absolute">
+      <div>
         <div>
-          <div ref="containerRef"></div>
+            <div ref="containerRef"></div>
         </div>
         <p>{{ currentTime }}</p>
-        <button v-if="showAudioRecordButton" @click="startAudioRecordHandler">
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M7 8C7 5.23858 9.23858 3 12 3C14.7614 3 17 5.23858 17 8V11C17 13.7614 14.7614 16 12 16C9.23858 16 7 13.7614 7 11V8Z"
-              stroke="#1C274C"
-              stroke-width="1.5"
-            />
-            <path
-              d="M13 8L17 8"
-              stroke="#1C274C"
-              stroke-width="1.5"
-              stroke-linecap="round"
-            />
-            <path
-              d="M13 11L17 11"
-              stroke="#1C274C"
-              stroke-width="1.5"
-              stroke-linecap="round"
-            />
-            <path
-              d="M20 10V11C20 15.4183 16.4183 19 12 19C7.58172 19 4 15.4183 4 11V10"
-              stroke="#1C274C"
-              stroke-width="1.5"
-              stroke-linecap="round"
-            />
-            <path
-              d="M12 19V22"
-              stroke="#1C274C"
-              stroke-width="1.5"
-              stroke-linecap="round"
-            />
-          </svg>
-        </button>
+        <button v-if="showAudioRecordButton" @click="startAudioRecordHandler"> Start Recording </button>
         <div v-else>
-          <button @click="pauseRecording">
-            {{ isPauseResume ? "pause" : "resume" }}
-          </button>
-          <button @click="stopHandler">Stop</button>
+            <button @click="pauseRecording">{{ isPauseResume ? 'pause' : 'resume' }}</button>
+            <button @click="stopHandler">Stop</button>
         </div>
-      </div>
+    </div>
     </div>
   </div>
 </template>
@@ -220,11 +180,6 @@ import { useAuthStore } from "../stores/authStore";
 import defaultProfile from "../../public/images/default-avatar.avif";
 import { onMounted, ref, computed } from "vue";
 import { useRoute } from "vue-router";
-
-import { useWaveSurferRecorder } from "@meersagor/wavesurfer-vue";
-const showAudioRecordButton = ref<boolean>(true);
-const containerRef = ref<HTMLDivElement | null>(null);
-
 const route = useRoute();
 const authStore = useAuthStore();
 const chatContainer = ref(null);
@@ -380,41 +335,39 @@ const scrollToBottom = () => {
   chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
 };
 
-const options = computed(() => ({
-  height: 48,
-  waveColor: "#66667D",
-  progressColor: "#6A24FF",
-  barGap: 5,
-  barWidth: 5,
-  barRadius: 8,
-  cursorWidth: 0,
-  url: "https://revews-bucket.s3.ap-southeast-1.amazonaws.com/a06mmMU3sgnzuUkH4OiHvyuUgCFdLSnJaDLBao7y.webm",
-}));
+import { useWaveSurferRecorder } from '@meersagor/wavesurfer-vue'
+const showAudioRecordButton = ref<boolean>(true)
+const containerRef = ref<HTMLDivElement | null>(null)
 
-const {
-  pauseRecording,
-  startRecording,
-  stopRecording,
-  currentTime,
-  isPauseResume,
-} = useWaveSurferRecorder({
-  containerRef,
-  options: options.value,
-  recordPluginOptions: {
-    continuousWaveform: true,
-  },
-});
+const options = computed(() => ({
+    height: 48,
+    waveColor: "#66667D",
+    progressColor: "#6A24FF",
+    barGap: 5,
+    barWidth: 5,
+    barRadius: 8,
+    cursorWidth: 0,
+    url: "https://revews-bucket.s3.ap-southeast-1.amazonaws.com/a06mmMU3sgnzuUkH4OiHvyuUgCFdLSnJaDLBao7y.webm",
+}))
+
+const { pauseRecording, startRecording, stopRecording, currentTime, isPauseResume } = useWaveSurferRecorder({
+    containerRef,
+    options: options.value,
+      recordPluginOptions:{
+        continuousWaveform: true
+      }
+})
 
 const startAudioRecordHandler = () => {
-  startRecording();
-  showAudioRecordButton.value = false;
-};
+    startRecording()
+    showAudioRecordButton.value = false
+}
 
 const stopHandler = async () => {
-  const blob = await stopRecording();
-  console.log("blob =====", blob);
-  showAudioRecordButton.value = true;
-};
+    const blob = await stopRecording()
+    console.log('blob =====', blob);
+    showAudioRecordButton.value = true
+}
 
 onMounted(async () => {
   await fetch_user_conversation();

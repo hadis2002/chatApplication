@@ -74,19 +74,23 @@
         <img class="w-[50%]" src="../../public/images/empty-chat.png" alt="" />
         <p class="text-white text-lg opacity-60">گفت و گو را آغاز کنید.</p>
       </div>
-      <div v-else v-for="message in validMessages" :key="message.id">
+      <div v-else v-for="message in messages" :key="message.id" class="text-white">
         <div
           class="flex"
           :class="{
-            'justify-start': message.sender == authStore.userLoginInfo.uid,
-            'justify-end': message.sender != authStore.userLoginInfo.uid,
+            'justify-start':
+              message.sender == authStore.userLoginInfo.uid,
+            'justify-end':
+              message.sender != authStore.userLoginInfo.uid,
           }"
         >
           <div
             class="flex items-start gap-2 p-3 w-fit"
             :class="{
-              'flex-row': message.sender == authStore.userLoginInfo.uid,
-              'flex-row-reverse': message.sender != authStore.userLoginInfo.uid,
+              'flex-row':
+                message.sender == authStore.userLoginInfo.uid,
+              'flex-row-reverse':
+                message.sender != authStore.userLoginInfo.uid,
             }"
           >
             <img
@@ -97,10 +101,13 @@
               "
               class="w-10 h-10 rounded-full"
               :class="
-                message.sender == authStore.userLoginInfo.uid ? 'hidden' : ''
+                message.sender == authStore.userLoginInfo.uid
+                  ? 'hidden'
+                  : ''
               "
             />
             <div
+              v-if="message.type == 'text'"
               class="p-3 rounded-lg max-w-xs"
               :class="{
                 'bg-blue-500 text-white':
@@ -111,12 +118,24 @@
             >
               <p>{{ message?.data.text }}</p>
             </div>
+            <div v-if="message.type == 'audio'" class="flex items-center gap-2">
+              <audio :src="message.data.url" controls></audio>
+              <!-- <div style="max-width: 250px"> {{ message.data.url }}
+                <Vue3WaveAudioPlayer
+                  :wave_width="250"
+                  :wave_height="40"
+                  :wave_options='{"samples":50}' 
+                  :src="message.data.url"
+                  :load_audio_onmount="true"
+                  />  
+              </div> -->
+            </div>
           </div>
         </div>
       </div>
     </div>
     <div class="bg-[#21242b] flex items-center justify-between px-5 h-[10%]">
-      <div class="flex items-center gap-2">
+      <div v-if="!showAudioRecordButton" class="flex items-center gap-2 w-[90%]">
         <div @click="append_message">
           <svg
             class="w-5 h-5"
@@ -156,27 +175,38 @@
           />
         </div>
       </div>
-      <div>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="gray"
-          width="24"
-          height="24"
-        >
-          <path
-            d="M12 3a4 4 0 0 0-4 4v5a4 4 0 0 0 8 0V7a4 4 0 0 0-4-4zm2 9a2 2 0 0 1-4 0V7a2 2 0 0 1 4 0v5z"
-          />
-          <path
-            d="M19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7H3c0 4.42 3.58 8 8 8s8-3.58 8-8h-2z"
-          />
-        </svg>
+
+      <!-- record  -->
+      <div :class="showAudioRecordButton ? '' : 'hidden'" class="w-[90%] flex gap-2 items-center">
+          <div class="w-[80%]">
+              <div ref="containerRef"></div>
+          </div>
+          <p class="w-[20%] text-gray-300">{{ currentTime }}</p>
+      </div>
+      <div class="w-[10%] flex justify-center">
+          <svg id="microphone" @touchstart="startAudioRecordHandler" @touchend="stopHandler" class="w-6 h-6" fill="gray" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+            width="800px" height="800px" viewBox="0 0 47.964 47.965"
+            xml:space="preserve">
+          <g>
+            <g>
+              <path d="M23.982,35.268c5.531,0,10.033-4.635,10.033-10.332V10.333C34.015,4.635,29.513,0,23.982,0
+                c-5.532,0-10.032,4.635-10.032,10.333v14.604C13.951,30.633,18.451,35.268,23.982,35.268z M29.22,24.938
+                c0,2.974-2.35,5.395-5.238,5.395s-5.238-2.42-5.238-5.395V10.333c0-2.974,2.35-5.395,5.238-5.395s5.238,2.42,5.238,5.395V24.938z"
+                />
+              <path d="M40.125,29.994c0-1.361-1.222-2.469-2.72-2.469c-1.5,0-2.721,1.107-2.721,2.469c0,4.042-3.621,7.329-8.074,7.329h-5.257
+                c-4.453,0-8.074-3.287-8.074-7.329c0-1.361-1.221-2.469-2.721-2.469c-1.499,0-2.719,1.107-2.719,2.469
+                c0,6.736,6.014,12.221,13.424,12.266v0.766h-5.944c-1.499,0-2.72,1.107-2.72,2.47s1.221,2.47,2.72,2.47h17.325
+                c1.5,0,2.721-1.107,2.721-2.47s-1.221-2.47-2.721-2.47h-5.942V42.26C34.111,42.215,40.125,36.73,40.125,29.994z"/>
+            </g>
+          </g>
+          </svg>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useWaveSurferRecorder } from '@meersagor/wavesurfer-vue'
 import axiosConfig from "../../src/axiosConfig";
 import { CometChat } from "@cometchat-pro/chat";
 import { useAuthStore } from "../stores/authStore";
@@ -188,18 +218,114 @@ const authStore = useAuthStore();
 const chatContainer = ref(null);
 let messages = ref([]);
 const userData = ref([]);
+let userId = route.params.conversationId.split("_")[0];
+
 const messageForm = ref({
   sender: authStore.userLoginInfo.uid,
-  receiverId: "",
+  receiverId: userId,
   receiverType: "",
   data: {
     text: "",
   },
 });
 
+
+const showAudioRecordButton = ref<boolean>(false)
+const containerRef = ref<HTMLDivElement | null>(null)
+  const options = () =>
+  computed(() => ({
+    height: 48,
+    waveColor: "#fff",
+    progressColor: "#6A24FF",
+    barGap: 5,
+    barWidth: 5,
+    barRadius: 8,
+    cursorWidth: 0,
+    duration: 80,
+    // url: audioUrl, // مقدار URL صوتی
+  }));
+
+
+
+const { startRecording, stopRecording, currentTime } = useWaveSurferRecorder({
+    containerRef,
+    options: options.value,
+      recordPluginOptions:{
+        continuousWaveform: true
+      }
+})
+
+const isRecording = ref(false);
+const audioBlob = ref<Blob | null>(null);
+
+const startAudioRecordHandler = async () => {
+  if (isRecording.value) return;
+  showAudioRecordButton.value = true;
+  isRecording.value = true;
+  await startRecording();
+};
+
+const stopHandler = async () => {
+  if (!isRecording.value) return;
+  showAudioRecordButton.value = false;
+  isRecording.value = false;
+  audioBlob.value = await stopRecording();
+  append_message();
+};
+
+const append_message = () => {
+  let receiverId = messageForm.value.receiverId;
+  let receiverType = CometChat.RECEIVER_TYPE.USER;
+  let messageText = messageForm.value.data.text;
+    const textMessage = new CometChat.TextMessage(
+      receiverId,
+      messageText,
+      receiverType
+    );
+    CometChat.sendMessage(textMessage).then(
+      (sentTextMessage) => {
+        console.log("Text message sent successfully", sentTextMessage);
+        messages.value.push(sentTextMessage);
+        setTimeout(() => {
+          scrollToBottom();
+        }, 200);
+        messageForm.value.data.text = "";
+      },
+      (error) => {
+        console.error("Text message sending failed", error);
+      }
+    );
+
+  if (audioBlob.value) {
+    const mediaFile = new File([audioBlob.value], "audio.webm", { type: "audio/webm" });
+    const mediaMessage = new CometChat.MediaMessage(
+      receiverId,
+      mediaFile,
+      CometChat.MESSAGE_TYPE.AUDIO, // برای پیام صوتی
+      receiverType
+    );
+
+    CometChat.sendMessage(mediaMessage).then(
+      (sentMediaMessage) => {
+        console.log("Media message sent successfully", sentMediaMessage);
+        messages.value.push(sentMediaMessage);
+        setTimeout(() => {
+          scrollToBottom();
+        }, 200);
+      },
+      (error) => {
+        console.log("Media message sending failed with error", error);
+      }
+    );
+  }
+};
+
 const fetch_user_data = () => {
+  if (userId == authStore.userLoginInfo.uid) {
+    userId = route.params.conversationId.split("_")[2]
+  }
   axiosConfig
-    .get(`users/${messageForm.value.receiverId}`)
+    .get(`users/${userId}`)
     .then((res) => {
       userData.value = res.data.data;
     })
@@ -212,26 +338,25 @@ const validMessages = computed(() => {
   return messages.value.filter((message) => message.data && message.data.text);
 });
 
-const fetch_user_conversation = async () => {
-  try {
-    const res = await axiosConfig.get(
-      `conversations/${route.params.conversationId}`
-    );
-    const arrUID = res.data.data[0].conversationId.split("_user_");
-    messageForm.value.receiverId =
-      arrUID[0] == authStore.userLoginInfo.uid ? arrUID[1] : arrUID[0];
-    messages.value = res.data.data;
-  } catch (err) {}
+const fetch_user_conversation = () => {
+  axiosConfig
+    .get(`conversations/${route.params.conversationId}`)
+    .then((res) => {
+      messages.value = res.data.data;
+    })
+    .catch((error) => {
+      console.log(error);
+    });
 };
 
 const fetch_messages = () => {
   axiosConfig
-    .get(`users/${messageForm.value.receiverId}/messages`)
+    .get(`users/${userId}/messages`)
     .then((res) => {
       messages.value = res.data.data.filter((message) => {
-        return message.conversationId == route.params.conversationId;
-      });
-      console.log(messages.value, "all messages");
+        return message.conversationId == route.params.conversationId
+      })
+      console.log(messages.value , 'all messages');
       setTimeout(() => {
         scrollToBottom();
       }, 200);
@@ -239,31 +364,6 @@ const fetch_messages = () => {
     .catch((error) => {
       console.log(error);
     });
-};
-
-const append_message = () => {
-  let receiverId = messageForm.value.receiverId;
-  let messageText = messageForm.value.data.text;
-  let receiverType = CometChat.RECEIVER_TYPE.USER;
-  const textMessage = new CometChat.TextMessage(
-    receiverId,
-    messageText,
-    receiverType
-  );
-  CometChat.sendMessage(textMessage).then(
-    (textMessage) => {
-      textMessage.sender = authStore.userLoginInfo.uid;
-      console.log("message sent successfully", textMessage.receiver);
-      messages.value.push(textMessage);
-      setTimeout(() => {
-        scrollToBottom();
-      }, 200);
-      messageForm.value.data.text = "";
-    },
-    (error) => {
-      console.error("Message sending failed", error);
-    }
-  );
 };
 
 const fetch_message_listener = () => {
@@ -275,8 +375,8 @@ const fetch_message_listener = () => {
         console.log("New message received:", textMessage);
         messages.value.push(textMessage);
         setTimeout(() => {
-          scrollToBottom();
-        }, 50);
+        scrollToBottom();
+      }, 50);
       },
     })
   );
@@ -295,14 +395,32 @@ const fetch_message_listener = () => {
 //     });
 // };
 
+document.addEventListener('DOMContentLoaded', function() {
+    const microphoneIcon = document.getElementById('microphone');
+
+    microphoneIcon.addEventListener('touchstart', () => {
+        microphoneIcon.classList.add('touched');
+        microphoneIcon.classList.add('recording');
+        startAudioRecordHandler();
+    });
+
+    microphoneIcon.addEventListener('touchend', () => {
+        microphoneIcon.classList.remove('recording');
+        setTimeout(() => {
+            microphoneIcon.classList.remove('touched');
+        }, 300);
+    });
+});
+
+
 const scrollToBottom = () => {
   chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
 };
 
-onMounted(async () => {
-  await fetch_user_conversation();
+onMounted(() => {
   fetch_user_data();
   fetch_message_listener();
+  fetch_user_conversation();
   fetch_messages();
 });
 </script>
@@ -311,4 +429,36 @@ onMounted(async () => {
 html {
   scroll-behavior: smooth;
 }
+#microphone {
+    transition: transform 0.3s ease, fill 0.3s ease;
+}
+#microphone.touched {
+    transform: scale(1.2);
+    fill: white;
+    background-color: rgb(65, 104, 177);
+    border-radius: 100%;
+    padding: 7px;
+}
+@keyframes recordingAnimation {
+    0% {
+        transform: scale(1.3);
+    }
+    50% {
+        transform: scale(2);
+    }
+    100% {
+        transform: scale(1.3);
+    }
+}
+
+.recording {
+    animation: recordingAnimation 1s infinite;
+}
+main h1{
+  display: none;
+}
+main{
+  background-color: rgb(120, 58, 197);
+}
+
 </style>

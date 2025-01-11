@@ -12,13 +12,16 @@
     "@cometchat-pro/chat": "^3.0.13",
     "@cometchat/chat-sdk-javascript": "^4.0.10",
     "@headlessui/vue": "^1.7.23",
+    "@meersagor/wavesurfer-vue": "^1.0.0",
     "@vitejs/plugin-basic-ssl": "^1.2.0",
     "@vueuse/core": "^11.3.0",
     "axios": "^1.7.7",
+    "lamejs": "^1.2.1",
     "node-fetch": "^2.7.0",
     "pinia": "^2.2.6",
     "socket.io-client": "^4.8.1",
-    "vue-router": "^4.4.5"
+    "vue-router": "^4.4.5",
+    "vue3-wave-audio-player": "^2.0.3"
   },
   "devDependencies": {
     "@types/vue": "^2.0.0",

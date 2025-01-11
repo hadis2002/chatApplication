@@ -50,11 +50,13 @@
           <div class="text-gray-400">{{ userData.name }}</div>
           <div
             :class="
-              userData.status == 'online' ? 'text-green-500' : 'text-gray-300'
+              userData.status == 'available'
+                ? 'text-green-500'
+                : 'text-gray-300'
             "
             class="text-xs"
           >
-            {{ userData.status }}
+            {{ userData.status == "available" ? "online" : "offline" }}
           </div>
         </div>
         <div>
@@ -213,16 +215,21 @@ import { useAuthStore } from "../stores/authStore";
 import defaultProfile from "../../public/images/default-avatar.avif";
 import { onMounted, ref, computed } from "vue";
 import { useRoute } from "vue-router";
+
+import { useWaveSurferRecorder } from "@meersagor/wavesurfer-vue";
+const showAudioRecordButton = ref<boolean>(true);
+const containerRef = ref<HTMLDivElement | null>(null);
+
 const route = useRoute();
 const authStore = useAuthStore();
 const chatContainer = ref(null);
 let messages = ref([]);
 const userData = ref([]);
-let userId = route.params.conversationId.split("_")[0];
+// let userId = route.params.conversationId.split("_")[0];
 
 const messageForm = ref({
   sender: authStore.userLoginInfo.uid,
-  receiverId: userId,
+  receiverId: '',
   receiverType: "",
   data: {
     text: "",
@@ -284,6 +291,7 @@ const append_message = () => {
     );
     CometChat.sendMessage(textMessage).then(
       (sentTextMessage) => {
+        textMessage.sender = authStore.userLoginInfo.uid
         console.log("Text message sent successfully", sentTextMessage);
         messages.value.push(sentTextMessage);
         setTimeout(() => {
@@ -321,11 +329,11 @@ const append_message = () => {
 };
 
 const fetch_user_data = () => {
-  if (userId == authStore.userLoginInfo.uid) {
-    userId = route.params.conversationId.split("_")[2]
-  }
+  // if (userId == authStore.userLoginInfo.uid) {
+  //   userId = route.params.conversationId.split("_")[2]
+  // }
   axiosConfig
-    .get(`users/${userId}`)
+    .get(`users/${messageForm.value.receiverId}`)
     .then((res) => {
       userData.value = res.data.data;
     })
@@ -339,19 +347,28 @@ const validMessages = computed(() => {
 });
 
 const fetch_user_conversation = () => {
-  axiosConfig
-    .get(`conversations/${route.params.conversationId}`)
-    .then((res) => {
-      messages.value = res.data.data;
-    })
-    .catch((error) => {
-      console.log(error);
-    });
+  // axiosConfig
+  //   .get(`conversations/${route.params.conversationId}`)
+  //   .then((res) => {
+  //     messages.value = res.data.data;
+  //   })
+  //   .catch((error) => {
+  //     console.log(error);
+  //   });
+  try{
+      const res = await axiosConfig.get(
+          `conversations/${route.params.conversationId}`
+      )
+      const arrUID = res.data.data[0].conversationId.split('_user_')
+      messageForm.value.receiverId =
+        arrUID[0] = authStore.userLoginInfo.uid ? arrUID[1] : arrUID[0]
+        messages.value = res.data.data
+  } catch(err) {}
 };
 
 const fetch_messages = () => {
   axiosConfig
-    .get(`users/${userId}/messages`)
+    .get(`users/${messageForm.value.receiverId}/messages`)
     .then((res) => {
       messages.value = res.data.data.filter((message) => {
         return message.conversationId == route.params.conversationId
@@ -381,6 +398,44 @@ const fetch_message_listener = () => {
     })
   );
 };
+
+// const is_typing_user = () => {
+//   let receiverId = messageForm.value.receiverId;
+//   let receiverType = CometChat.RECEIVER_TYPE.USER;
+//   let typingNotification = new CometChat.TypingIndicator(
+//     receiverId,
+//     receiverType
+//   );
+//   CometChat.startTyping(typingNotification);
+//   let listenerId = "is_typing_listener";
+//   CometChat.addMessageListener(
+//     listenerId,
+//     new CometChat.MessageListener({
+//       onTypingStarted: (typingIndicator) => {
+//         typingIndicator.sender = authStore.userLoginInfo.uid
+//         typingIndicator.receiverId = messageForm.value.receiverId
+//         console.log("Typing started :", typingIndicator , receiverId);
+//         // if (typingIndicator.receiverId === receiverId) {
+//         // }
+//       },
+//       onTypingEnded: (typingIndicator) => {
+//         console.log("Typing ended :", typingIndicator);
+//         // if (typingIndicator.receiverId === receiverId) {
+//         // }
+//       },
+//     })
+//   );
+// };
+
+// const stopTyping = () => {
+//   let receiverId = messageForm.value.receiverId;
+//   let receiverType = CometChat.RECEIVER_TYPE.USER;
+//   let typingNotification = new CometChat.TypingIndicator(
+//     receiverId,
+//     receiverType
+//   );
+//   CometChat.endTyping(typingNotification);
+// };
 
 // const send_message = (newMessage) => {
 //   axiosConfig
@@ -417,10 +472,10 @@ const scrollToBottom = () => {
   chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
 };
 
-onMounted(() => {
+onMounted( async () => {
+  await fetch_user_conversation();
   fetch_user_data();
   fetch_message_listener();
-  fetch_user_conversation();
   fetch_messages();
 });
 </script>

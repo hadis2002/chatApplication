@@ -16,6 +16,6 @@ This is a **chat application ** built using **CometChat's backend services**. Th
 To install and run the project locally, follow these steps:  
 
 ```bash
-git clone https://github.com/your-username/repository-name.git
+git clone https://github.com/hadis2002/chatApplication.git
 cd chatApplication
 npm install
